@@ -1,0 +1,33 @@
+name: DynamicServerShop
+main: com.yourorg.servershop.ServerShopPlugin
+version: 1.2.0
+api-version: '1.20'
+depend: [Vault]
+author: yourorg
+description: Dynamic server shop with GUIs, MySQL logging, importer, and per-item dynamic pricing.
+commands:
+  shop:
+    description: Buy from the server shop or open GUI.
+    usage: "/shop [buy|price|search|admin] ..."
+    permission: servershop.use
+  sell:
+    description: Sell to the server shop.
+    usage: "/sell <material> <qty>"
+    permission: servershop.use
+  sellall:
+    description: Sell all sellable items in your inventory.
+    usage: "/sellall"
+    permission: servershop.use
+  shoplog:
+    description: View transaction log.
+    usage: "/shoplog [player] [limit]"
+    permission: servershop.admin
+  weeklyshop:
+    description: Show weekly shop items.
+    usage: "/weeklyshop"
+    permission: servershop.use
+permissions:
+  servershop.use:
+    default: true
+  servershop.admin:
+    default: op
