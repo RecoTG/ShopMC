@@ -1,0 +1,47 @@
+messages:
+  prefix: '&6[Shop] &7'
+weekly:
+  count: 6
+  discount: 0.80
+  firstDayOfWeek: MONDAY
+priceModel:
+  minFactor: 0.5
+  maxFactor: 1.5
+  sellStep: 0.01
+logging:
+  storage: YAML  # YAML or MYSQL
+  maxEntries: 1000
+mysql:
+  host: localhost
+  port: 3306
+  database: servershop
+  user: shop
+  password: changeme
+  pool:
+    maxPoolSize: 10
+    minimumIdle: 2
+    connectionTimeoutMs: 10000
+    idleTimeoutMs: 600000
+    maxLifetimeMs: 1800000
+dynamicPricing:
+  enabled: true
+  storage: YAML   # YAML or MYSQL
+  initialMultiplier: 1.0
+  minMultiplier: 0.5
+  maxMultiplier: 2.0
+  buyStep: 0.005
+  sellStep: 0.005
+  decay:
+    enabled: true
+    perHourTowards1: 0.02
+    saveEveryMinutes: 5
+gui:
+  titles:
+    categories: '&8Server Shop'
+    items: '&8%category%'
+    weekly: '&8Weekly Picks'
+    sell: '&8Sell Items'
+  rows:
+    categories: 3
+    items: 6
+    sell: 6
