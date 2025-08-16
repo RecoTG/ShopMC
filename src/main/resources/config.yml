@@ -8,6 +8,7 @@ priceModel:
   minFactor: 0.5
   maxFactor: 1.5
   sellStep: 0.01
+  sellMultiplier: 0.8 # players sell at 80% of the base price
 logging:
   storage: YAML  # YAML or MYSQL
   maxEntries: 1000

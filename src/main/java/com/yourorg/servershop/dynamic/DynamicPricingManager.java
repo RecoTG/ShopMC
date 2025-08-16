@@ -70,8 +70,9 @@ public final class DynamicPricingManager {
         double mult = currentMultiplier(m);
         String cat = plugin.catalog().categoryOf(m);
         double catMult = plugin.categorySettings().multiplier(cat);
-        double price = base * mult * catMult;
-        return clampToBounds(price, base);
+        double sm = plugin.catalog().priceModel().sellMultiplier();
+        double price = base * sm * mult * catMult;
+        return clampToBounds(price, base * sm);
     }
 
     public synchronized void adjustOnBuy(Material m, int qty) {
