@@ -45,14 +45,15 @@ public final class AdminCommand {
         if (args.length == 0) { helpCategory(sender); return true; }
         String sub = args[0].toLowerCase();
         if (sub.equals("list")) {
-            StringBuilder sb = new StringBuilder("Categories: ");
+            StringBuilder sb = new StringBuilder("&eCategories: &r");
             for (String c : plugin.categorySettings().categories()) {
                 boolean en = plugin.categorySettings().isEnabled(c);
                 double m = plugin.categorySettings().multiplier(c);
-                sb.append(ChatColor.YELLOW).append(c).append(ChatColor.GRAY).append("[")
-                        .append(en?"on":"off").append(", x").append(m).append("] ");
+                sb.append("&e").append(c).append("&7[")
+                  .append(en ? "on" : "off")
+                  .append(", x").append(m).append("] ");
             }
-            sender.sendMessage(sb.toString());
+            sender.sendMessage(ChatColor.translateAlternateColorCodes('&', sb.toString()));
             return true;
         }
         if (sub.equals("setmult") && args.length >= 3) {
