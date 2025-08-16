@@ -8,6 +8,8 @@ public final class DynamicPricingManager {
     private final ServerShopPlugin plugin;
     private final PriceStorage storage;
     private final java.util.Map<Material, PriceState> map = new java.util.EnumMap<>(Material.class);
+    private final java.util.Map<PriceCacheKey, PriceCacheEntry> priceCache = new java.util.HashMap<>();
+    private static final long PRICE_CACHE_TTL_MS = 3000; // 3s cache ttl
     private final boolean enabled;
     private final double initMult, minMult, maxMult, buyStep, sellStep, perHourTowards1;
     private final boolean decayEnabled;
@@ -58,20 +60,34 @@ public final class DynamicPricingManager {
     }
 
     public synchronized double buyPrice(Material m, double base) {
-        double mult = currentMultiplier(m);
-        double weeklyDiscount = plugin.weekly().isWeekly(m) ? plugin.getConfig().getDouble("weekly.discount", 0.80) : 1.0;
+        boolean weekly = plugin.weekly().isWeekly(m);
         String cat = plugin.catalog().categoryOf(m);
         double catMult = plugin.categorySettings().multiplier(cat);
-        double price = base * mult * weeklyDiscount * catMult;
-        return clampToBounds(price, base);
+        PriceCacheKey key = new PriceCacheKey(m, weekly, catMult, true);
+        long now = System.currentTimeMillis();
+        PriceCacheEntry cached = priceCache.get(key);
+        if (cached != null && cached.expiresAt() > now) return cached.price();
+
+        double mult = currentMultiplier(m);
+        double weeklyDiscount = weekly ? plugin.getConfig().getDouble("weekly.discount", 0.80) : 1.0;
+        double price = clampToBounds(base * mult * weeklyDiscount * catMult, base);
+        priceCache.put(key, new PriceCacheEntry(price, now + PRICE_CACHE_TTL_MS));
+        return price;
     }
 
     public synchronized double sellPrice(Material m, double base) {
-        double mult = currentMultiplier(m);
+        boolean weekly = plugin.weekly().isWeekly(m);
         String cat = plugin.catalog().categoryOf(m);
         double catMult = plugin.categorySettings().multiplier(cat);
-        double price = base * mult * catMult;
-        return clampToBounds(price, base);
+        PriceCacheKey key = new PriceCacheKey(m, weekly, catMult, false);
+        long now = System.currentTimeMillis();
+        PriceCacheEntry cached = priceCache.get(key);
+        if (cached != null && cached.expiresAt() > now) return cached.price();
+
+        double mult = currentMultiplier(m);
+        double price = clampToBounds(base * mult * catMult, base);
+        priceCache.put(key, new PriceCacheEntry(price, now + PRICE_CACHE_TTL_MS));
+        return price;
     }
 
     public synchronized void adjustOnBuy(Material m, int qty) {
@@ -79,6 +95,7 @@ public final class DynamicPricingManager {
         PriceState st = map.computeIfAbsent(m, k -> new PriceState(initMult, System.currentTimeMillis()));
         st.multiplier = clampMult(st.multiplier + buyStep * qty);
         st.lastUpdateMs = System.currentTimeMillis();
+        invalidateCache(m);
         saveLater(m, st);
     }
 
@@ -87,6 +104,7 @@ public final class DynamicPricingManager {
         PriceState st = map.computeIfAbsent(m, k -> new PriceState(initMult, System.currentTimeMillis()));
         st.multiplier = clampMult(st.multiplier - sellStep * qty);
         st.lastUpdateMs = System.currentTimeMillis();
+        invalidateCache(m);
         saveLater(m, st);
     }
 
@@ -128,4 +146,11 @@ public final class DynamicPricingManager {
         st.multiplier = clampMult(newMult);
         st.lastUpdateMs = nowMs;
     }
+
+    private void invalidateCache(Material m) {
+        priceCache.keySet().removeIf(k -> k.material() == m);
+    }
+
+    private record PriceCacheKey(Material material, boolean weekly, double catMult, boolean buy) { }
+    private record PriceCacheEntry(double price, long expiresAt) { }
 }
