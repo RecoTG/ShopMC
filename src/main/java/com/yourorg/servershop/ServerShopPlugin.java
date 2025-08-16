@@ -12,6 +12,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bstats.bukkit.Metrics;
 
 public final class ServerShopPlugin extends JavaPlugin {
     private Economy economy;
@@ -49,6 +50,7 @@ public final class ServerShopPlugin extends JavaPlugin {
         getCommand("sellall").setExecutor(new SellAllCommand(this));
         getCommand("shoplog").setExecutor(new ShopLogCommand(this));
         getCommand("weeklyshop").setExecutor(new WeeklyShopCommand(this));
+        new Metrics(this, 21916);
         getLogger().info("DynamicServerShop enabled (Importer + Admin + Category multipliers + Fuzzy Search).");
     }
 
