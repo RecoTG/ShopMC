@@ -7,6 +7,7 @@ import com.yourorg.servershop.shop.*;
 import com.yourorg.servershop.weekly.*;
 import com.yourorg.servershop.dynamic.*;
 import com.yourorg.servershop.config.*;
+import com.yourorg.servershop.metrics.*;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -22,6 +23,7 @@ public final class ServerShopPlugin extends JavaPlugin {
     private ShopService shopService;
     private DynamicPricingManager dynamic;
     private CategorySettings categorySettings;
+    private MetricsManager metrics;
 
     @Override public void onEnable() {
         saveDefaultConfig();
@@ -35,6 +37,7 @@ public final class ServerShopPlugin extends JavaPlugin {
         this.categorySettings = new CategorySettings(this);
         this.catalog = new Catalog(this); catalog.reload();
         this.weekly = new WeeklyShopManager(this);
+        this.metrics = new MetricsManager(this);
         this.logger = new LoggerManager(this);
         this.dynamic = new DynamicPricingManager(this);
         this.shopService = new ShopService(this);
@@ -74,6 +77,7 @@ public final class ServerShopPlugin extends JavaPlugin {
     public Economy economy() { return economy; }
     public Catalog catalog() { return catalog; }
     public LoggerManager logger() { return logger; }
+    public MetricsManager metrics() { return metrics; }
     public WeeklyShopManager weekly() { return weekly; }
     public MenuManager menus() { return menus; }
     public ShopService shop() { return shopService; }

@@ -43,6 +43,7 @@ public final class LoggerManager {
     }
 
     public void logAsync(Transaction tx) {
+        plugin.metrics().track(tx);
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             try { storage.append(tx); } catch (Exception e) { plugin.getLogger().warning("Failed to log: " + e.getMessage()); }
         });

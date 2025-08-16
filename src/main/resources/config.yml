@@ -8,6 +8,8 @@ priceModel:
   minFactor: 0.5
   maxFactor: 1.5
   sellStep: 0.01
+metrics:
+  enabled: false
 logging:
   storage: YAML  # YAML or MYSQL
   maxEntries: 1000
