@@ -27,7 +27,12 @@ public final class CategorySettings {
     public synchronized boolean isEnabled(String name) { Entry e = map.get(name); return e == null ? true : e.enabled; }
     public synchronized double multiplier(String name) { Entry e = map.get(name); return e == null ? 1.0 : e.multiplier; }
     public synchronized void setEnabled(String name, boolean on) { ensureCategory(name); map.get(name).enabled = on; save(); }
-    public synchronized void setMultiplier(String name, double m) { ensureCategory(name); map.get(name).multiplier = Math.max(0.0, m); save(); }
+    public synchronized void setMultiplier(String name, double m) {
+        ensureCategory(name);
+        if (Double.isNaN(m) || Double.isInfinite(m)) return;
+        map.get(name).multiplier = Math.max(0.0, Math.min(10.0, m));
+        save();
+    }
     public synchronized Set<String> categories() { return new LinkedHashSet<>(map.keySet()); }
 
     public synchronized void load() {

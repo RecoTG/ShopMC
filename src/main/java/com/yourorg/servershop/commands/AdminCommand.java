@@ -53,9 +53,18 @@ public final class AdminCommand {
         if (sub.equals("setmult") && args.length >= 3) {
             String cat = args[1];
             double m;
-            try { m = Double.parseDouble(args[2]); } catch (Exception e) { sender.sendMessage(plugin.prefixed("Bad number.")); return true; }
+            try {
+                m = Double.parseDouble(args[2]);
+            } catch (Exception e) {
+                sender.sendMessage(plugin.prefixed("Multiplier must be a number between 0.0 and 10.0."));
+                return true;
+            }
+            if (Double.isNaN(m) || Double.isInfinite(m) || m < 0.0 || m > 10.0) {
+                sender.sendMessage(plugin.prefixed("Multiplier must be between 0.0 and 10.0."));
+                return true;
+            }
             plugin.categorySettings().setMultiplier(cat, m);
-            sender.sendMessage(plugin.prefixed("Set multiplier for "+cat+" to x"+m));
+            sender.sendMessage(plugin.prefixed("Set multiplier for " + cat + " to x" + m));
             return true;
         }
         if (sub.equals("toggle") && args.length >= 3) {
