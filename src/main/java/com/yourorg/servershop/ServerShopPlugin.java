@@ -41,6 +41,10 @@ public final class ServerShopPlugin extends JavaPlugin {
         this.menus = new MenuManager(this);
         Bukkit.getPluginManager().registerEvents(menus, this);
 
+        if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
+            new com.yourorg.servershop.papi.ShopPlaceholderExpansion(this).register();
+        }
+
         int saveEvery = Math.max(1, getConfig().getInt("dynamicPricing.decay.saveEveryMinutes", 5));
         Bukkit.getScheduler().runTaskTimerAsynchronously(this, dynamic::tickSaveAll, 20L * 60L * saveEvery, 20L * 60L * saveEvery);
 
