@@ -1,6 +1,7 @@
 package com.yourorg.servershop.gui;
 
 import com.yourorg.servershop.ServerShopPlugin;
+import com.yourorg.servershop.util.Money;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -45,7 +46,7 @@ public final class SellMenu implements MenuView {
         for (var ent : map.entrySet()) {
             double unit = plugin.shop().priceSell(ent.getKey());
             inv.setItem(i, GuiUtil.item(ent.getKey().isItem()?ent.getKey():Material.PAPER, "&a"+ent.getKey().name(), GuiUtil.lore(
-                    "&7Unit: &6$"+String.format("%.2f", unit), "&7You have: &e"+ent.getValue(), "&8Click: sell stack  |  Shift: sell all of this")));
+                    "&7Unit: &6$"+Money.fmt(unit), "&7You have: &e"+ent.getValue(), "&8Click: sell stack  |  Shift: sell all of this")));
             i += (i % 9 == 7) ? 3 : 1;
         }
         inv.setItem(6*9-5, GuiUtil.item(Material.BARRIER, "&cSell All", GuiUtil.lore("&7Sells every sellable item")));
@@ -59,14 +60,14 @@ public final class SellMenu implements MenuView {
             var e = plugin.catalog().get(m).orElse(null); if (e == null || !e.canSell()) continue;
             int qty = s.getAmount();
             double unit = plugin.shop().priceSell(m);
-            double amount = unit * qty;
-            total += amount; stacks++;
+            double amount = Money.money(unit * qty).doubleValue();
+            total = Money.money(total + amount).doubleValue(); stacks++;
             p.getInventory().setItem(i, null);
             plugin.logger().logAsync(new com.yourorg.servershop.logging.Transaction(java.time.Instant.now(), p.getName(), com.yourorg.servershop.logging.Transaction.Type.SELL, m, qty, amount));
             // TODO: consider calling plugin.dynamic().adjustOnSell(m, qty) per TODO list
         }
         if (total > 0) plugin.economy().depositPlayer(p, total);
-        p.sendMessage(plugin.prefixed(plugin.getConfig().getString("messages.soldall").replace("%count%", String.valueOf(stacks)).replace("%total%", String.format("%.2f", total))));
+        p.sendMessage(plugin.prefixed(plugin.getConfig().getString("messages.soldall").replace("%count%", String.valueOf(stacks)).replace("%total%", Money.fmt(total))));
         refresh(p);
     }
 

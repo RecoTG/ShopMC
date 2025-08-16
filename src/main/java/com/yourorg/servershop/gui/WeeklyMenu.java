@@ -1,6 +1,7 @@
 package com.yourorg.servershop.gui;
 
 import com.yourorg.servershop.ServerShopPlugin;
+import com.yourorg.servershop.util.Money;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -17,7 +18,7 @@ public final class WeeklyMenu implements MenuView {
         for (var m : plugin.weekly().currentPicks()) {
             double price = plugin.shop().priceBuy(m);
             inv.setItem(i, GuiUtil.item(m.isItem()?m:Material.BOOK, "&b"+m.name(), GuiUtil.lore(
-                    "&7Weekly price: &a$"+String.format("%.2f", price),
+                    "&7Weekly price: &a$"+Money.fmt(price),
                     "&8Left-click: buy 1  |  Shift-left: buy 16")));
             i += (i % 9 == 7) ? 3 : 1;
         }

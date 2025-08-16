@@ -4,6 +4,7 @@ import com.yourorg.servershop.ServerShopPlugin;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
+import java.math.BigDecimal;
 
 import java.io.File;
 import java.util.*;
@@ -31,8 +32,10 @@ public final class Catalog {
                 Material m = Material.matchMaterial(key);
                 if (m == null) continue;
                 var isec = sec.getConfigurationSection(key);
-                double buy = isec.getDouble("buy", 0.0);
-                double sell = isec.getDouble("sell", 0.0);
+                Object bObj = isec.get("buy");
+                Object sObj = isec.get("sell");
+                double buy = bObj == null ? 0.0 : new BigDecimal(String.valueOf(bObj)).doubleValue();
+                double sell = sObj == null ? 0.0 : new BigDecimal(String.valueOf(sObj)).doubleValue();
                 items.put(m, new ItemEntry(m, buy, sell));
                 mats.add(m);
                 catByMat.put(m, cat);
