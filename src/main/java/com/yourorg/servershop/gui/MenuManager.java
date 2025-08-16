@@ -1,6 +1,7 @@
 package com.yourorg.servershop.gui;
 
 import com.yourorg.servershop.ServerShopPlugin;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -8,18 +9,23 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 
+import java.util.function.Consumer;
+
 public final class MenuManager implements Listener {
     private final ServerShopPlugin plugin;
     private final java.util.Map<java.util.UUID, MenuView> open = new java.util.HashMap<>();
 
     public MenuManager(ServerShopPlugin plugin) { this.plugin = plugin; }
 
-    public void openCategories(Player p) { open(p, new CategoryMenu(plugin)); }
-    public void openItems(Player p, String category) { open(p, new ItemsMenu(plugin, category)); }
+    public void openCategories(Player p) { openCategories(p, 0); }
+    public void openCategories(Player p, int page) { open(p, new CategoryMenu(plugin, page)); }
+    public void openItems(Player p, String category) { openItems(p, category, 0); }
+    public void openItems(Player p, String category, int page) { open(p, new ItemsMenu(plugin, category, page)); }
     public void openWeekly(Player p) { if (p!=null) open(p, new WeeklyMenu(plugin)); }
     public void openSell(Player p) { open(p, new SellMenu(plugin)); }
     public void openSearch(Player p, String query, java.util.List<org.bukkit.Material> results) { open(p, new SearchMenu(plugin, query, results, 0)); }
     public void openSearch(Player p, String query, java.util.List<org.bukkit.Material> results, int page) { open(p, new SearchMenu(plugin, query, results, page)); }
+    public void openConfirm(Player p, Material m, Consumer<Player> back) { open(p, new ConfirmMenu(plugin, m, back)); }
 
     private void open(Player p, MenuView view) {
         Inventory inv = view.build();

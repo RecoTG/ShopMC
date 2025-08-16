@@ -33,7 +33,7 @@ public final class SearchMenu implements MenuView {
             inv.setItem(i, GuiUtil.item(m.isItem()?m:Material.PAPER, "&e"+m.name(), GuiUtil.lore(
                     "&7Buy: &a$"+String.format("%.2f", buy),
                     "&7Sell: &6$"+(sell>0?String.format("%.2f", sell):"-"),
-                    "&8Left-click: buy 1  |  Shift-left: buy 16",
+                    "&8Left-click: buy",
                     "&8Right-click: show price")));
             i += (i % 9 == 7) ? 3 : 1;
         }
@@ -52,8 +52,7 @@ public final class SearchMenu implements MenuView {
         var m = org.bukkit.Material.matchMaterial(org.bukkit.ChatColor.stripColor(it.getItemMeta().getDisplayName()));
         if (m == null) return;
         if (e.isRightClick()) { double buy = plugin.shop().priceBuy(m); p.sendMessage(plugin.prefixed(m.name()+": $"+String.format("%.2f", buy))); return; }
-        int qty = e.isShiftClick() ? 16 : 1;
-        plugin.shop().buy(p, m, qty).ifPresent(err -> p.sendMessage(plugin.prefixed(err)));
+        plugin.menus().openConfirm(p, m, pl -> plugin.menus().openSearch(pl, query, results, page));
     }
 
     @Override public String title() { return plugin.getConfig().getString("gui.titles.items", "%category%").replace("%category%", "Search: "+query+" ("+(page+1)+")"); }
