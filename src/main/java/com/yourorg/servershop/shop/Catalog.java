@@ -26,14 +26,17 @@ public final class Catalog {
         if (cats == null) return;
         for (String cat : cats.getKeys(false)) {
             ConfigurationSection sec = cats.getConfigurationSection(cat);
+            boolean catAllow = sec.getBoolean("allow-custom", false);
             List<Material> mats = new ArrayList<>();
             for (String key : sec.getKeys(false)) {
+                if ("allow-custom".equalsIgnoreCase(key)) continue;
                 Material m = Material.matchMaterial(key);
                 if (m == null) continue;
                 var isec = sec.getConfigurationSection(key);
                 double buy = isec.getDouble("buy", 0.0);
                 double sell = isec.getDouble("sell", 0.0);
-                items.put(m, new ItemEntry(m, buy, sell));
+                boolean allow = isec.getBoolean("allow-custom", catAllow);
+                items.put(m, new ItemEntry(m, buy, sell, allow));
                 mats.add(m);
                 catByMat.put(m, cat);
             }
