@@ -43,15 +43,21 @@ public final class LoggerManager {
     }
 
     public void logAsync(Transaction tx) {
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+        plugin.io(() -> {
             try { storage.append(tx); } catch (Exception e) { plugin.getLogger().warning("Failed to log: " + e.getMessage()); }
         });
     }
 
-    public void close() { try { storage.close(); } catch (Exception ignored) { } }
+    public void flush() {
+        try { storage.flush(); } catch (Exception e) { plugin.getLogger().warning("Failed to flush log: " + e.getMessage()); }
+    }
+
+    public void close() {
+        try { storage.flush(); storage.close(); } catch (Exception ignored) { }
+    }
 
     public void lastAsync(String playerOrNull, int limit, java.util.function.Consumer<List<Transaction>> cb) {
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+        plugin.io(() -> {
             try {
                 List<Transaction> list = (playerOrNull == null) ? storage.last(limit) : storage.lastOf(playerOrNull, limit);
                 Bukkit.getScheduler().runTask(plugin, () -> cb.accept(list));

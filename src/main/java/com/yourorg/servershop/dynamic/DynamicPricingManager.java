@@ -1,7 +1,6 @@
 package com.yourorg.servershop.dynamic;
 
 import com.yourorg.servershop.ServerShopPlugin;
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 
 public final class DynamicPricingManager {
@@ -91,7 +90,7 @@ public final class DynamicPricingManager {
     }
 
     private void saveLater(Material m, PriceState st) {
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+        plugin.io(() -> {
             try { storage.save(m, st); } catch (Exception e) { plugin.getLogger().warning("Failed to save price: "+e.getMessage()); }
         });
     }
@@ -100,13 +99,17 @@ public final class DynamicPricingManager {
         if (!enabled) return;
         long now = System.currentTimeMillis();
         for (var e : map.entrySet()) applyDecay(e.getValue(), now);
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+        plugin.io(() -> {
             try { storage.saveAll(new java.util.EnumMap<>(map)); } catch (Exception e) { plugin.getLogger().warning("Failed to save prices: "+e.getMessage()); }
         });
     }
 
+    public synchronized void flush() {
+        try { storage.flush(); } catch (Exception e) { plugin.getLogger().warning("Failed to flush prices: "+e.getMessage()); }
+    }
+
     public synchronized void close() {
-        try { storage.saveAll(map); storage.close(); } catch (Exception ignored) { }
+        try { storage.saveAll(map); storage.flush(); storage.close(); } catch (Exception ignored) { }
     }
 
     private double clampToBounds(double value, double base) { return plugin.catalog().priceModel().clampToBounds(value, base); }

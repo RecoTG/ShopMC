@@ -69,5 +69,7 @@ public final class SQLPriceStorage implements PriceStorage {
         }
     }
 
+    @Override public void flush() { }
+
     @Override public void close() { if (ds != null) ds.close(); }
 }
