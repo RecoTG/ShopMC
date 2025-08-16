@@ -52,6 +52,11 @@
       <artifactId>mysql-connector-j</artifactId>
       <version>8.4.0</version>
     </dependency>
+    <dependency>
+      <groupId>org.bstats</groupId>
+      <artifactId>bstats-bukkit</artifactId>
+      <version>3.0.2</version>
+    </dependency>
   </dependencies>
 
   <build>
@@ -75,7 +80,12 @@
             <goals><goal>shade</goal></goals>
             <configuration>
               <minimizeJar>false</minimizeJar>
-              <relocations/>
+              <relocations>
+                <relocation>
+                  <pattern>org.bstats</pattern>
+                  <shadedPattern>com.yourorg.servershop.metrics</shadedPattern>
+                </relocation>
+              </relocations>
             </configuration>
           </execution>
         </executions>

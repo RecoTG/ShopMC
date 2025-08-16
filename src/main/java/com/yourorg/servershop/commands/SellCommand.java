@@ -10,6 +10,7 @@ public final class SellCommand implements CommandExecutor {
     public SellCommand(ServerShopPlugin plugin) { this.plugin = plugin; }
 
     @Override public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
+        if (!plugin.checkCommandCooldown(sender)) return true;
         if (!(sender instanceof Player p)) { sender.sendMessage(plugin.prefixed(plugin.getConfig().getString("messages.not-a-player"))); return true; }
         if (args.length < 2) { p.sendMessage(plugin.prefixed("/sell <material> <qty>")); return true; }
         Material mat = Util.parseMaterial(args[1]);

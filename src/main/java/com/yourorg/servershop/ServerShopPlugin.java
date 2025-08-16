@@ -8,10 +8,16 @@ import com.yourorg.servershop.weekly.*;
 import com.yourorg.servershop.dynamic.*;
 import com.yourorg.servershop.config.*;
 import net.milkbowl.vault.economy.Economy;
+import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 public final class ServerShopPlugin extends JavaPlugin {
     private Economy economy;
@@ -22,6 +28,7 @@ public final class ServerShopPlugin extends JavaPlugin {
     private ShopService shopService;
     private DynamicPricingManager dynamic;
     private CategorySettings categorySettings;
+    private final Map<UUID, Long> commandCooldowns = new HashMap<>();
 
     @Override public void onEnable() {
         saveDefaultConfig();
@@ -49,6 +56,9 @@ public final class ServerShopPlugin extends JavaPlugin {
         getCommand("sellall").setExecutor(new SellAllCommand(this));
         getCommand("shoplog").setExecutor(new ShopLogCommand(this));
         getCommand("weeklyshop").setExecutor(new WeeklyShopCommand(this));
+        if (getConfig().getBoolean("metrics.enabled", true)) {
+            new Metrics(this, 21532);
+        }
         getLogger().info("DynamicServerShop enabled (Importer + Admin + Category multipliers + Fuzzy Search).");
     }
 
@@ -79,4 +89,19 @@ public final class ServerShopPlugin extends JavaPlugin {
     public ShopService shop() { return shopService; }
     public DynamicPricingManager dynamic() { return dynamic; }
     public CategorySettings categorySettings() { return categorySettings; }
+
+    public boolean checkCommandCooldown(CommandSender sender) {
+        long cooldownMs = getConfig().getLong("commands.cooldownSeconds", 0) * 1000L;
+        if (cooldownMs <= 0 || !(sender instanceof Player p)) return true;
+        long now = System.currentTimeMillis();
+        Long last = commandCooldowns.get(p.getUniqueId());
+        if (last != null && now - last < cooldownMs) {
+            long wait = (cooldownMs - (now - last) + 999) / 1000;
+            String msg = getConfig().getString("messages.cooldown", "Please wait %seconds%s before using commands again.");
+            p.sendMessage(prefixed(msg.replace("%seconds%", String.valueOf(wait))));
+            return false;
+        }
+        commandCooldowns.put(p.getUniqueId(), now);
+        return true;
+    }
 }
