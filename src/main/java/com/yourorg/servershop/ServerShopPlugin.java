@@ -9,6 +9,10 @@ import com.yourorg.servershop.dynamic.*;
 import com.yourorg.servershop.config.*;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
+import net.kyori.adventure.platform.bukkit.BukkitAudiences;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.ChatColor;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -22,6 +26,8 @@ public final class ServerShopPlugin extends JavaPlugin {
     private ShopService shopService;
     private DynamicPricingManager dynamic;
     private CategorySettings categorySettings;
+    private BukkitAudiences adventure;
+    private MiniMessage mini;
 
     @Override public void onEnable() {
         saveDefaultConfig();
@@ -39,6 +45,8 @@ public final class ServerShopPlugin extends JavaPlugin {
         this.dynamic = new DynamicPricingManager(this);
         this.shopService = new ShopService(this);
         this.menus = new MenuManager(this);
+        this.adventure = BukkitAudiences.create(this);
+        this.mini = MiniMessage.miniMessage();
         Bukkit.getPluginManager().registerEvents(menus, this);
 
         int saveEvery = Math.max(1, getConfig().getInt("dynamicPricing.decay.saveEveryMinutes", 5));
@@ -55,6 +63,7 @@ public final class ServerShopPlugin extends JavaPlugin {
     @Override public void onDisable() {
         if (logger != null) logger.close();
         if (dynamic != null) dynamic.close();
+        if (adventure != null) adventure.close();
     }
 
     private boolean setupEconomy() {
@@ -70,6 +79,16 @@ public final class ServerShopPlugin extends JavaPlugin {
         String prefix = ChatColor.translateAlternateColorCodes('&', raw);
         return prefix + msg;
     }
+
+    public Component prefixed(Component message) {
+        String raw = getConfig().getString("messages.prefix", "&6[Shop] &7");
+        Component prefix = LegacyComponentSerializer.legacyAmpersand().deserialize(raw);
+        return prefix.append(message);
+    }
+
+    public BukkitAudiences adventure() { return adventure; }
+    public MiniMessage mini() { return mini; }
+    public double taxRate() { return getConfig().getDouble("taxRate", 0.0); }
 
     public Economy economy() { return economy; }
     public Catalog catalog() { return catalog; }

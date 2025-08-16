@@ -4,6 +4,7 @@ weekly:
   count: 6
   discount: 0.80
   firstDayOfWeek: MONDAY
+taxRate: 0.0
 priceModel:
   minFactor: 0.5
   maxFactor: 1.5
