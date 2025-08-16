@@ -4,8 +4,11 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
 import java.sql.*;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 public final class SQLLogStorage implements LogStorage {
+    private static final long RETENTION_MS = 90L * 24 * 60 * 60 * 1000; // 90 days
     private final HikariDataSource ds;
 
     public SQLLogStorage(String host, int port, String database, String user, String password, int maxPool, int minIdle, long connTimeout, long idleTimeout, long maxLifetime) throws Exception {
@@ -22,17 +25,26 @@ public final class SQLLogStorage implements LogStorage {
     }
 
     private void init() throws Exception {
-        try (Connection c = ds.getConnection(); Statement st = c.createStatement()) {
-            st.executeUpdate("CREATE TABLE IF NOT EXISTS servershop_transactions (" +
-                    "id BIGINT AUTO_INCREMENT PRIMARY KEY," +
-                    "time_ms BIGINT NOT NULL," +
-                    "player VARCHAR(32) NOT NULL," +
-                    "type VARCHAR(8) NOT NULL," +
-                    "material VARCHAR(64) NOT NULL," +
-                    "quantity INT NOT NULL," +
-                    "amount DOUBLE NOT NULL," +
-                    "INDEX idx_player_time (player, time_ms)" +
-                    ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+        try (Connection c = ds.getConnection()) {
+            try (Statement st = c.createStatement()) {
+                st.executeUpdate("CREATE TABLE IF NOT EXISTS servershop_transactions (" +
+                        "id BIGINT AUTO_INCREMENT PRIMARY KEY," +
+                        "time_ms BIGINT NOT NULL," +
+                        "player VARCHAR(32) NOT NULL," +
+                        "type VARCHAR(8) NOT NULL," +
+                        "material VARCHAR(64) NOT NULL," +
+                        "quantity INT NOT NULL," +
+                        "amount DECIMAL(19,4) NOT NULL," +
+                        "INDEX idx_uuid (player)," +
+                        "INDEX idx_item (material)," +
+                        "INDEX idx_ts (time_ms)" +
+                        ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+            }
+
+            try (PreparedStatement ps = c.prepareStatement("DELETE FROM servershop_transactions WHERE time_ms < ?")) {
+                ps.setLong(1, System.currentTimeMillis() - RETENTION_MS);
+                ps.executeUpdate();
+            }
         }
     }
 
@@ -44,7 +56,7 @@ public final class SQLLogStorage implements LogStorage {
             ps.setString(3, tx.type.name());
             ps.setString(4, tx.material.name());
             ps.setInt(5, tx.quantity);
-            ps.setDouble(6, tx.amount);
+            ps.setBigDecimal(6, BigDecimal.valueOf(tx.amount).setScale(4, RoundingMode.HALF_UP));
             ps.executeUpdate();
         }
     }
@@ -70,7 +82,7 @@ public final class SQLLogStorage implements LogStorage {
                             Transaction.Type.valueOf(rs.getString(3)),
                             org.bukkit.Material.matchMaterial(rs.getString(4)),
                             rs.getInt(5),
-                            rs.getDouble(6)));
+                            rs.getBigDecimal(6).doubleValue()));
                 }
                 return list;
             }

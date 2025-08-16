@@ -5,6 +5,8 @@ import com.zaxxer.hikari.HikariDataSource;
 import org.bukkit.Material;
 
 import java.sql.*;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 public final class SQLPriceStorage implements PriceStorage {
     private final HikariDataSource ds;
@@ -26,7 +28,7 @@ public final class SQLPriceStorage implements PriceStorage {
         try (Connection c = ds.getConnection(); Statement st = c.createStatement()) {
             st.executeUpdate("CREATE TABLE IF NOT EXISTS servershop_prices (" +
                     "material VARCHAR(64) PRIMARY KEY," +
-                    "multiplier DOUBLE NOT NULL," +
+                    "multiplier DECIMAL(19,4) NOT NULL," +
                     "last_update_ms BIGINT NOT NULL" +
                     ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
         }
@@ -39,7 +41,7 @@ public final class SQLPriceStorage implements PriceStorage {
                 while (rs.next()) {
                     Material m = Material.matchMaterial(rs.getString(1));
                     if (m == null) continue;
-                    map.put(m, new PriceState(rs.getDouble(2), rs.getLong(3)));
+                    map.put(m, new PriceState(rs.getBigDecimal(2).doubleValue(), rs.getLong(3)));
                 }
             }
             return map;
@@ -50,7 +52,7 @@ public final class SQLPriceStorage implements PriceStorage {
         String sql = "INSERT INTO servershop_prices(material, multiplier, last_update_ms) VALUES (?,?,?) ON DUPLICATE KEY UPDATE multiplier=VALUES(multiplier), last_update_ms=VALUES(last_update_ms)";
         try (Connection c = ds.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setString(1, mat.name());
-            ps.setDouble(2, st.multiplier);
+            ps.setBigDecimal(2, BigDecimal.valueOf(st.multiplier).setScale(4, RoundingMode.HALF_UP));
             ps.setLong(3, st.lastUpdateMs);
             ps.executeUpdate();
         }
@@ -61,7 +63,7 @@ public final class SQLPriceStorage implements PriceStorage {
         try (Connection c = ds.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
             for (var e : map.entrySet()) {
                 ps.setString(1, e.getKey().name());
-                ps.setDouble(2, e.getValue().multiplier);
+                ps.setBigDecimal(2, BigDecimal.valueOf(e.getValue().multiplier).setScale(4, RoundingMode.HALF_UP));
                 ps.setLong(3, e.getValue().lastUpdateMs);
                 ps.addBatch();
             }
