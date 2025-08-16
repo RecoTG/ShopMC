@@ -1,10 +1,12 @@
 package com.yourorg.servershop.commands;
 
+import com.yourorg.servershop.ServerShopPlugin;
 import org.bukkit.Material;
+import org.bukkit.command.CommandSender;
 
 public final class Util {
-    public static Material parseMaterial(String raw) {
-        if (raw == null) return null;
-        return Material.matchMaterial(raw.toUpperCase().replace('-', '_').replace(' ', '_'));
+    public static Material parseMaterial(ServerShopPlugin plugin, CommandSender sender, String raw) {
+        if (plugin == null) return null;
+        return plugin.lang().parseMaterial(sender, raw);
     }
 }
