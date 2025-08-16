@@ -7,6 +7,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.time.Instant;
+import java.util.Locale;
 import java.util.Optional;
 
 public final class ShopService {
@@ -42,6 +43,8 @@ public final class ShopService {
         if (opt.isEmpty() || !opt.get().canSell()) return Optional.of(msg("not-sellable").replace("%material%", mat.name()));
         String cat = plugin.catalog().categoryOf(mat);
         if (!plugin.categorySettings().isEnabled(cat)) return Optional.of("Category disabled: "+cat);
+        if (!p.hasPermission("servershop.category." + cat.toLowerCase(Locale.ROOT)))
+            return Optional.of("No permission for category: " + cat);
         int removed = removeFromInventory(p, mat, qty);
         if (removed <= 0) return Optional.of("You don't have that.");
         double unit = plugin.dynamic().sellPrice(mat, opt.get().sellPrice());
