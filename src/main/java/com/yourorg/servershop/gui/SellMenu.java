@@ -62,7 +62,8 @@ public final class SellMenu implements MenuView {
             double amount = unit * qty;
             total += amount; stacks++;
             p.getInventory().setItem(i, null);
-            plugin.logger().logAsync(new com.yourorg.servershop.logging.Transaction(java.time.Instant.now(), p.getName(), com.yourorg.servershop.logging.Transaction.Type.SELL, m, qty, amount));
+            String cat = plugin.catalog().categoryOf(m);
+            plugin.logger().logAsync(new com.yourorg.servershop.logging.Transaction(java.time.Instant.now(), p.getName(), com.yourorg.servershop.logging.Transaction.Type.SELL, m, qty, amount, cat));
             // TODO: consider calling plugin.dynamic().adjustOnSell(m, qty) per TODO list
         }
         if (total > 0) plugin.economy().depositPlayer(p, total);

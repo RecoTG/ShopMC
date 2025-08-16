@@ -51,9 +51,25 @@ public final class LoggerManager {
     public void close() { try { storage.close(); } catch (Exception ignored) { } }
 
     public void lastAsync(String playerOrNull, int limit, java.util.function.Consumer<List<Transaction>> cb) {
+        queryAsync(playerOrNull, null, null, 0, limit, cb);
+    }
+
+    public void queryAsync(String player, org.bukkit.Material material, String category, int offset, int limit, java.util.function.Consumer<List<Transaction>> cb) {
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             try {
-                List<Transaction> list = (playerOrNull == null) ? storage.last(limit) : storage.lastOf(playerOrNull, limit);
+                List<Transaction> list = storage.query(player, material, category, offset, limit);
+                Bukkit.getScheduler().runTask(plugin, () -> cb.accept(list));
+            } catch (Exception e) {
+                plugin.getLogger().warning("Failed to read log: " + e.getMessage());
+                Bukkit.getScheduler().runTask(plugin, () -> cb.accept(java.util.Collections.emptyList()));
+            }
+        });
+    }
+
+    public void sinceAsync(java.time.Instant from, java.util.function.Consumer<List<Transaction>> cb) {
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            try {
+                List<Transaction> list = storage.since(from);
                 Bukkit.getScheduler().runTask(plugin, () -> cb.accept(list));
             } catch (Exception e) {
                 plugin.getLogger().warning("Failed to read log: " + e.getMessage());

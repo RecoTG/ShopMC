@@ -20,7 +20,7 @@ commands:
     permission: servershop.use
   shoplog:
     description: View transaction log.
-    usage: "/shoplog [player] [limit]"
+    usage: "/shoplog [page] [player <p>] [item <m>] [category <c>] | /shoplog export <time> [player <p>] [item <m>] [category <c>]"
     permission: servershop.admin
   weeklyshop:
     description: Show weekly shop items.
