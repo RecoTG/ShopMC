@@ -13,6 +13,7 @@ public final class LoggerManager {
         this.plugin = plugin;
         var c = plugin.getConfig();
         String mode = c.getString("logging.storage", "YAML").toUpperCase();
+        long flushSec = c.getLong("yaml.flushEverySeconds", 5L);
         LogStorage s;
         if ("MYSQL".equals(mode)) {
             try {
@@ -32,11 +33,11 @@ public final class LoggerManager {
             } catch (Exception e) {
                 plugin.getLogger().warning("MySQL setup failed, falling back to YAML: " + e.getMessage());
                 int max = c.getInt("logging.maxEntries", 1000);
-                s = new YAMLLogStorage(plugin.getDataFolder(), max);
+                s = new YAMLLogStorage(plugin, max, flushSec);
             }
         } else {
             int max = c.getInt("logging.maxEntries", 1000);
-            s = new YAMLLogStorage(plugin.getDataFolder(), max);
+            s = new YAMLLogStorage(plugin, max, flushSec);
             plugin.getLogger().info("Logging storage: YAML");
         }
         this.storage = s;
@@ -47,6 +48,8 @@ public final class LoggerManager {
             try { storage.append(tx); } catch (Exception e) { plugin.getLogger().warning("Failed to log: " + e.getMessage()); }
         });
     }
+
+    public void flush() { try { storage.flush(); } catch (Exception ignored) { } }
 
     public void close() { try { storage.close(); } catch (Exception ignored) { } }
 

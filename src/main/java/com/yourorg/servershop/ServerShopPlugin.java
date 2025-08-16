@@ -53,8 +53,8 @@ public final class ServerShopPlugin extends JavaPlugin {
     }
 
     @Override public void onDisable() {
-        if (logger != null) logger.close();
-        if (dynamic != null) dynamic.close();
+        if (logger != null) { logger.flush(); logger.close(); }
+        if (dynamic != null) { dynamic.flush(); dynamic.close(); }
     }
 
     private boolean setupEconomy() {

@@ -51,6 +51,7 @@ public final class SQLLogStorage implements LogStorage {
 
     @Override public java.util.List<Transaction> last(int limit) throws Exception { return query(null, limit); }
     @Override public java.util.List<Transaction> lastOf(String player, int limit) throws Exception { return query(player, limit); }
+    @Override public void flush() { }
     @Override public void close() { if (ds != null) ds.close(); }
 
     private java.util.List<Transaction> query(String player, int limit) throws Exception {

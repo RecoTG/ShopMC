@@ -1,36 +1,75 @@
 package com.yourorg.servershop.logging;
 
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 
+/**
+ * YAML based transaction log storage with asynchronous batching. Transactions
+ * are queued and written to disk periodically to reduce disk writes.
+ */
 public final class YAMLLogStorage implements LogStorage {
-    private final File file; private final int maxEntries;
+    private final JavaPlugin plugin;
+    private final File file;
+    private final int maxEntries;
+    private final java.util.List<Transaction> pending = new java.util.ArrayList<>();
+    private final int taskId;
 
-    public YAMLLogStorage(File dataFolder, int maxEntries) {
-        this.file = new File(dataFolder, "transactions.yml");
+    public YAMLLogStorage(JavaPlugin plugin, int maxEntries, long flushSeconds) {
+        this.plugin = plugin;
+        this.file = new File(plugin.getDataFolder(), "transactions.yml");
         this.maxEntries = Math.max(100, maxEntries);
+        long ticks = Math.max(1L, flushSeconds) * 20L;
+        this.taskId = Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, this::flush, ticks, ticks).getTaskId();
     }
 
-    @Override public synchronized void append(Transaction tx) throws Exception {
+    @Override
+    public synchronized void append(Transaction tx) {
+        pending.add(tx);
+    }
+
+    @Override
+    public synchronized java.util.List<Transaction> last(int limit) throws Exception {
+        return filter(null, limit);
+    }
+
+    @Override
+    public synchronized java.util.List<Transaction> lastOf(String player, int limit) throws Exception {
+        return filter(player.toLowerCase(java.util.Locale.ROOT), limit);
+    }
+
+    @Override
+    public synchronized void flush() {
+        if (pending.isEmpty()) return;
         YamlConfiguration y = load();
         java.util.List<java.util.Map<String, Object>> entries = (java.util.List<java.util.Map<String, Object>>) y.getList("entries", new java.util.ArrayList<>());
-        java.util.Map<String, Object> row = new java.util.LinkedHashMap<>();
-        row.put("time", tx.time.toEpochMilli());
-        row.put("player", tx.player);
-        row.put("type", tx.type.name());
-        row.put("material", tx.material.name());
-        row.put("quantity", tx.quantity);
-        row.put("amount", tx.amount);
-        entries.add(row);
+        for (Transaction tx : pending) {
+            java.util.Map<String, Object> row = new java.util.LinkedHashMap<>();
+            row.put("time", tx.time.toEpochMilli());
+            row.put("player", tx.player);
+            row.put("type", tx.type.name());
+            row.put("material", tx.material.name());
+            row.put("quantity", tx.quantity);
+            row.put("amount", tx.amount);
+            entries.add(row);
+        }
+        pending.clear();
         while (entries.size() > maxEntries) entries.remove(0);
         y.set("entries", entries);
-        y.save(file);
+        try {
+            y.save(file);
+        } catch (Exception e) {
+            plugin.getLogger().warning("Failed to save log: " + e.getMessage());
+        }
     }
 
-    @Override public synchronized java.util.List<Transaction> last(int limit) throws Exception { return filter(null, limit); }
-    @Override public synchronized java.util.List<Transaction> lastOf(String player, int limit) throws Exception { return filter(player.toLowerCase(java.util.Locale.ROOT), limit); }
-    @Override public void close() { }
+    @Override
+    public synchronized void close() {
+        Bukkit.getScheduler().cancelTask(taskId);
+        flush();
+    }
 
     private java.util.List<Transaction> filter(String playerLower, int limit) throws Exception {
         YamlConfiguration y = load();
@@ -53,5 +92,8 @@ public final class YAMLLogStorage implements LogStorage {
         return list;
     }
 
-    private YamlConfiguration load() { return YamlConfiguration.loadConfiguration(file); }
+    private YamlConfiguration load() {
+        return YamlConfiguration.loadConfiguration(file);
+    }
 }
+
