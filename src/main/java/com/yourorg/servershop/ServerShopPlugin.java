@@ -22,16 +22,35 @@ public final class ServerShopPlugin extends JavaPlugin {
     private ShopService shopService;
     private DynamicPricingManager dynamic;
     private CategorySettings categorySettings;
+    private AliasManager aliases;
+    private String defaultLang;
+    private boolean useClientLocale;
+    private java.util.Map<java.util.UUID, String> playerLocales;
 
     @Override public void onEnable() {
         saveDefaultConfig();
         saveResource("messages.yml", false);
         saveResource("shop.yml", false);
+        saveResource("aliases-en.yml", false);
+        saveResource("aliases-es.yml", false);
+
+        this.defaultLang = getConfig().getString("locale.default", "en").toLowerCase(java.util.Locale.ROOT);
+        this.useClientLocale = getConfig().getBoolean("locale.useClientLocale", true);
+        this.playerLocales = new java.util.HashMap<>();
+        org.bukkit.configuration.ConfigurationSection sec = getConfig().getConfigurationSection("locale.players");
+        if (sec != null) {
+            for (String k : sec.getKeys(false)) {
+                String v = sec.getString(k);
+                try { playerLocales.put(java.util.UUID.fromString(k), v.toLowerCase(java.util.Locale.ROOT)); } catch (Exception ignored) {}
+            }
+        }
+
         if (!setupEconomy()) {
             getLogger().severe("Vault economy not found. Disabling.");
             Bukkit.getPluginManager().disablePlugin(this);
             return;
         }
+        this.aliases = new AliasManager(this, defaultLang);
         this.categorySettings = new CategorySettings(this);
         this.catalog = new Catalog(this); catalog.reload();
         this.weekly = new WeeklyShopManager(this);
@@ -79,4 +98,19 @@ public final class ServerShopPlugin extends JavaPlugin {
     public ShopService shop() { return shopService; }
     public DynamicPricingManager dynamic() { return dynamic; }
     public CategorySettings categorySettings() { return categorySettings; }
+    public AliasManager aliases() { return aliases; }
+
+    public String locale(org.bukkit.command.CommandSender sender) {
+        if (sender instanceof org.bukkit.entity.Player p) {
+            String forced = playerLocales.get(p.getUniqueId());
+            if (forced != null && !forced.isEmpty()) return forced;
+            if (useClientLocale) {
+                String loc = p.getLocale();
+                if (loc != null && loc.length() >= 2) {
+                    return loc.substring(0,2).toLowerCase(java.util.Locale.ROOT);
+                }
+            }
+        }
+        return defaultLang;
+    }
 }

@@ -1,5 +1,9 @@
 messages:
   prefix: '&6[Shop] &7'
+locale:
+  default: en
+  useClientLocale: true
+  players: {}
 weekly:
   count: 6
   discount: 0.80
