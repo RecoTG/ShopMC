@@ -44,6 +44,13 @@ public final class ServerShopPlugin extends JavaPlugin {
         int saveEvery = Math.max(1, getConfig().getInt("dynamicPricing.decay.saveEveryMinutes", 5));
         Bukkit.getScheduler().runTaskTimerAsynchronously(this, dynamic::tickSaveAll, 20L * 60L * saveEvery, 20L * 60L * saveEvery);
 
+        double decayFactor = getConfig().getDouble("decayToOne.factor", 0.05);
+        long hour = 20L * 60L * 60L;
+        Bukkit.getScheduler().runTaskTimerAsynchronously(this, () -> {
+            categorySettings.decayTowardsOne(decayFactor, catalog.priceModel().minFactor(), catalog.priceModel().maxFactor());
+            dynamic.decayTowardsOne(decayFactor);
+        }, hour, hour);
+
         getCommand("shop").setExecutor(new ShopCommand(this));
         getCommand("sell").setExecutor(new SellCommand(this));
         getCommand("sellall").setExecutor(new SellAllCommand(this));

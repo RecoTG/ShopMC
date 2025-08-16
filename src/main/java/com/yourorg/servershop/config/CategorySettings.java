@@ -30,6 +30,17 @@ public final class CategorySettings {
     public synchronized void setMultiplier(String name, double m) { ensureCategory(name); map.get(name).multiplier = Math.max(0.0, m); save(); }
     public synchronized Set<String> categories() { return new LinkedHashSet<>(map.keySet()); }
 
+    public synchronized void decayTowardsOne(double factor, double min, double max) {
+        boolean changed = false;
+        for (Entry e : map.values()) {
+            double m = e.multiplier;
+            if (m < min || m > max) continue;
+            e.multiplier = m + (1.0 - m) * factor;
+            changed = true;
+        }
+        if (changed) save();
+    }
+
     public synchronized void load() {
         map.clear();
         YamlConfiguration y = YamlConfiguration.loadConfiguration(file);

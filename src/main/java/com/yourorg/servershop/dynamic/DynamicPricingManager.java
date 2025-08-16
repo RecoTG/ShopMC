@@ -105,6 +105,19 @@ public final class DynamicPricingManager {
         });
     }
 
+    public synchronized void decayTowardsOne(double factor) {
+        if (!enabled) return;
+        for (var st : map.values()) {
+            double m = st.multiplier;
+            if (m < minMult || m > maxMult) continue;
+            st.multiplier = clampMult(m + (1.0 - m) * factor);
+            st.lastUpdateMs = System.currentTimeMillis();
+        }
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            try { storage.saveAll(new java.util.EnumMap<>(map)); } catch (Exception e) { plugin.getLogger().warning("Failed to save prices: "+e.getMessage()); }
+        });
+    }
+
     public synchronized void close() {
         try { storage.saveAll(map); storage.close(); } catch (Exception ignored) { }
     }
