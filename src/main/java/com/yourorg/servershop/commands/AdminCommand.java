@@ -3,6 +3,7 @@ package com.yourorg.servershop.commands;
 import com.yourorg.servershop.ServerShopPlugin;
 import com.yourorg.servershop.importer.ShopImporter;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.command.*;
 
 import java.io.File;
@@ -18,6 +19,7 @@ public final class AdminCommand {
             case "category": return handleCategory(sender, slice(args, 2));
             case "import": return handleImport(sender);
             case "reload": plugin.reloadConfig(); plugin.catalog().reload(); sender.sendMessage(plugin.prefixed("Reloaded.")); return true;
+            case "resetprice": return handleResetPrice(sender, slice(args, 2));
             default: help(sender); return true;
         }
     }
@@ -68,7 +70,21 @@ public final class AdminCommand {
         helpCategory(sender); return true;
     }
 
+    private boolean handleResetPrice(CommandSender sender, String[] args) {
+        if (args.length < 1) { sender.sendMessage(plugin.prefixed("/shop admin resetprice <material|all>")); return true; }
+        if (args[0].equalsIgnoreCase("all")) {
+            plugin.dynamic().resetAll();
+            sender.sendMessage(plugin.prefixed("Reset all prices."));
+            return true;
+        }
+        Material m = Util.parseMaterial(args[0]);
+        if (m == null) { sender.sendMessage(plugin.prefixed("Unknown material.")); return true; }
+        plugin.dynamic().reset(m);
+        sender.sendMessage(plugin.prefixed("Reset price for "+m.name()));
+        return true;
+    }
+
     private static String[] slice(String[] a, int from) { String[] b = new String[Math.max(0, a.length-from)]; System.arraycopy(a, from, b, 0, b.length); return b; }
-    private void help(CommandSender s) { s.sendMessage(plugin.prefixed("/shop admin category <list|setmult|toggle> ... | import | reload")); }
+    private void help(CommandSender s) { s.sendMessage(plugin.prefixed("/shop admin category <list|setmult|toggle> ... | import | reload | resetprice <mat|all>")); }
     private void helpCategory(CommandSender s) { s.sendMessage(plugin.prefixed("/shop admin category list | setmult <cat> <x> | toggle <cat> <on|off>")); }
 }
