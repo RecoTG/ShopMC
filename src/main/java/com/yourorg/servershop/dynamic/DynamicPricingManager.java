@@ -9,7 +9,7 @@ public final class DynamicPricingManager {
     private final PriceStorage storage;
     private final java.util.Map<Material, PriceState> map = new java.util.EnumMap<>(Material.class);
     private final boolean enabled;
-    private final double initMult, minMult, maxMult, buyStep, sellStep, perHourTowards1;
+    private final double initMult, minMult, maxMult, buyStep, sellStep, perHourTowards1, decayEpsilon;
     private final boolean decayEnabled;
 
     public DynamicPricingManager(ServerShopPlugin plugin) {
@@ -25,6 +25,7 @@ public final class DynamicPricingManager {
         var dec = dp.getConfigurationSection("decay");
         this.decayEnabled = dec.getBoolean("enabled", true);
         this.perHourTowards1 = dec.getDouble("perHourTowards1", 0.02);
+        this.decayEpsilon = dec.getDouble("epsilon", 0.01);
 
         String mode = dp.getString("storage", "YAML").toUpperCase();
         PriceStorage ps;
@@ -120,11 +121,17 @@ public final class DynamicPricingManager {
 
     private void applyDecay(PriceState st, long nowMs) {
         if (!decayEnabled) { st.lastUpdateMs = nowMs; return; }
+        if (Math.abs(st.multiplier - 1.0) <= decayEpsilon) {
+            st.multiplier = 1.0;
+            st.lastUpdateMs = nowMs;
+            return;
+        }
         long dt = Math.max(0, nowMs - st.lastUpdateMs);
         if (dt < 60_000L) { st.lastUpdateMs = nowMs; return; }
         double hours = dt / 3600000.0;
         double factor = Math.pow(1.0 - Math.max(0.0, Math.min(1.0, perHourTowards1)), hours);
         double newMult = 1.0 + (st.multiplier - 1.0) * factor;
+        if (Math.abs(newMult - 1.0) <= decayEpsilon) newMult = 1.0;
         st.multiplier = clampMult(newMult);
         st.lastUpdateMs = nowMs;
     }
