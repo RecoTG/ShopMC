@@ -6,8 +6,12 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
 
+import java.util.EnumMap;
+import java.util.Map;
+
 public final class YAMLPriceStorage implements PriceStorage {
     private final File file;
+    private final Map<Material, PriceState> pending = new EnumMap<>(Material.class);
 
     public YAMLPriceStorage(File dataFolder) { this.file = new File(dataFolder, "prices.yml"); }
 
@@ -25,21 +29,26 @@ public final class YAMLPriceStorage implements PriceStorage {
         return map;
     }
 
-    @Override public synchronized void save(Material mat, PriceState st) throws Exception {
-        YamlConfiguration y = YamlConfiguration.loadConfiguration(file);
-        y.set("prices."+mat.name()+".multiplier", st.multiplier);
-        y.set("prices."+mat.name()+".lastUpdate", st.lastUpdateMs);
-        y.save(file);
+    @Override public synchronized void save(Material mat, PriceState st) {
+        pending.put(mat, st);
     }
 
-    @Override public synchronized void saveAll(java.util.Map<Material, PriceState> map) throws Exception {
+    @Override public synchronized void saveAll(java.util.Map<Material, PriceState> map) {
+        pending.putAll(map);
+    }
+
+    @Override public synchronized void flush() throws Exception {
+        if (pending.isEmpty()) return;
         YamlConfiguration y = YamlConfiguration.loadConfiguration(file);
-        for (var e : map.entrySet()) {
+        for (var e : pending.entrySet()) {
             y.set("prices."+e.getKey().name()+".multiplier", e.getValue().multiplier);
             y.set("prices."+e.getKey().name()+".lastUpdate", e.getValue().lastUpdateMs);
         }
         y.save(file);
+        pending.clear();
     }
 
-    @Override public void close() { }
+    @Override public void close() {
+        try { flush(); } catch (Exception ignored) { }
+    }
 }

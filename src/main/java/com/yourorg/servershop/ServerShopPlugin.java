@@ -12,6 +12,9 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public final class ServerShopPlugin extends JavaPlugin {
     private Economy economy;
@@ -22,6 +25,7 @@ public final class ServerShopPlugin extends JavaPlugin {
     private ShopService shopService;
     private DynamicPricingManager dynamic;
     private CategorySettings categorySettings;
+    private final ExecutorService io = Executors.newSingleThreadExecutor();
 
     @Override public void onEnable() {
         saveDefaultConfig();
@@ -42,7 +46,13 @@ public final class ServerShopPlugin extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(menus, this);
 
         int saveEvery = Math.max(1, getConfig().getInt("dynamicPricing.decay.saveEveryMinutes", 5));
-        Bukkit.getScheduler().runTaskTimerAsynchronously(this, dynamic::tickSaveAll, 20L * 60L * saveEvery, 20L * 60L * saveEvery);
+        Bukkit.getScheduler().runTaskTimer(this, dynamic::tickSaveAll, 20L * 60L * saveEvery, 20L * 60L * saveEvery);
+
+        int flushSec = Math.max(1, getConfig().getInt("storage.flushSeconds", 10));
+        Bukkit.getScheduler().runTaskTimer(this, () -> io(() -> {
+            if (logger != null) logger.flush();
+            if (dynamic != null) dynamic.flush();
+        }), 20L * flushSec, 20L * flushSec);
 
         getCommand("shop").setExecutor(new ShopCommand(this));
         getCommand("sell").setExecutor(new SellCommand(this));
@@ -53,8 +63,10 @@ public final class ServerShopPlugin extends JavaPlugin {
     }
 
     @Override public void onDisable() {
-        if (logger != null) logger.close();
-        if (dynamic != null) dynamic.close();
+        if (logger != null) io(() -> { try { logger.close(); } catch (Exception ignored) { } });
+        if (dynamic != null) io(() -> { try { dynamic.close(); } catch (Exception ignored) { } });
+        io.shutdown();
+        try { io.awaitTermination(10, TimeUnit.SECONDS); } catch (InterruptedException ignored) { }
     }
 
     private boolean setupEconomy() {
@@ -79,4 +91,5 @@ public final class ServerShopPlugin extends JavaPlugin {
     public ShopService shop() { return shopService; }
     public DynamicPricingManager dynamic() { return dynamic; }
     public CategorySettings categorySettings() { return categorySettings; }
+    public void io(Runnable r) { io.execute(r); }
 }
