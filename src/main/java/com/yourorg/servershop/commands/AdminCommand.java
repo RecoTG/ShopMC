@@ -44,8 +44,17 @@ public final class AdminCommand {
             for (String c : plugin.categorySettings().categories()) {
                 boolean en = plugin.categorySettings().isEnabled(c);
                 double m = plugin.categorySettings().multiplier(c);
+                Double min = plugin.categorySettings().minFactor(c);
+                Double max = plugin.categorySettings().maxFactor(c);
                 sb.append(ChatColor.YELLOW).append(c).append(ChatColor.GRAY).append("[")
-                        .append(en?"on":"off").append(", x").append(m).append("] ");
+                        .append(en?"on":"off").append(", x").append(m);
+                if (min != null || max != null) {
+                    sb.append(", ");
+                    if (min != null) sb.append("min").append(min);
+                    if (min != null && max != null) sb.append("-");
+                    if (max != null) sb.append("max").append(max);
+                }
+                sb.append("] ");
             }
             sender.sendMessage(sb.toString());
             return true;
@@ -56,6 +65,22 @@ public final class AdminCommand {
             try { m = Double.parseDouble(args[2]); } catch (Exception e) { sender.sendMessage(plugin.prefixed("Bad number.")); return true; }
             plugin.categorySettings().setMultiplier(cat, m);
             sender.sendMessage(plugin.prefixed("Set multiplier for "+cat+" to x"+m));
+            return true;
+        }
+        if (sub.equals("setmin") && args.length >= 3) {
+            String cat = args[1];
+            Double v;
+            try { v = Double.parseDouble(args[2]); } catch (Exception e) { sender.sendMessage(plugin.prefixed("Bad number.")); return true; }
+            plugin.categorySettings().setMinFactor(cat, v);
+            sender.sendMessage(plugin.prefixed("Set minFactor for "+cat+" to "+v));
+            return true;
+        }
+        if (sub.equals("setmax") && args.length >= 3) {
+            String cat = args[1];
+            Double v;
+            try { v = Double.parseDouble(args[2]); } catch (Exception e) { sender.sendMessage(plugin.prefixed("Bad number.")); return true; }
+            plugin.categorySettings().setMaxFactor(cat, v);
+            sender.sendMessage(plugin.prefixed("Set maxFactor for "+cat+" to "+v));
             return true;
         }
         if (sub.equals("toggle") && args.length >= 3) {
@@ -69,6 +94,6 @@ public final class AdminCommand {
     }
 
     private static String[] slice(String[] a, int from) { String[] b = new String[Math.max(0, a.length-from)]; System.arraycopy(a, from, b, 0, b.length); return b; }
-    private void help(CommandSender s) { s.sendMessage(plugin.prefixed("/shop admin category <list|setmult|toggle> ... | import | reload")); }
-    private void helpCategory(CommandSender s) { s.sendMessage(plugin.prefixed("/shop admin category list | setmult <cat> <x> | toggle <cat> <on|off>")); }
+    private void help(CommandSender s) { s.sendMessage(plugin.prefixed("/shop admin category <list|setmult|setmin|setmax|toggle> ... | import | reload")); }
+    private void helpCategory(CommandSender s) { s.sendMessage(plugin.prefixed("/shop admin category list | setmult <cat> <x> | setmin <cat> <x> | setmax <cat> <x> | toggle <cat> <on|off>")); }
 }
