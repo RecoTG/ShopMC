@@ -10,7 +10,8 @@ import java.util.List;
 
 public final class CategoryMenu implements MenuView {
     private final ServerShopPlugin plugin;
-    public CategoryMenu(ServerShopPlugin plugin) { this.plugin = plugin; }
+    private final Player viewer;
+    public CategoryMenu(ServerShopPlugin plugin, Player viewer) { this.plugin = plugin; this.viewer = viewer; }
 
     @Override public Inventory build() {
         int rows = Math.max(1, plugin.getConfig().getInt("gui.rows.categories", 3));
@@ -18,6 +19,8 @@ public final class CategoryMenu implements MenuView {
         int slot = 10;
         for (String cat : plugin.catalog().categories().keySet()) {
             if (!plugin.categorySettings().isEnabled(cat)) continue;
+            String perm = plugin.categorySettings().permission(cat);
+            if (!perm.isEmpty() && !viewer.hasPermission(perm)) continue;
             List<Material> mats = plugin.catalog().categories().get(cat);
             Material icon = (mats != null && !mats.isEmpty() && mats.get(0).isItem()) ? mats.get(0) : Material.CHEST;
             inv.setItem(slot, GuiUtil.item(icon, "&e"+cat, GuiUtil.lore("&7Click to view items")));
@@ -36,6 +39,12 @@ public final class CategoryMenu implements MenuView {
         if (name.contains("Sell")) { plugin.menus().openSell(p); return; }
         String clean = org.bukkit.ChatColor.stripColor(name);
         if (!plugin.categorySettings().isEnabled(clean)) { p.sendMessage(plugin.prefixed("Category disabled.")); return; }
+        String perm = plugin.categorySettings().permission(clean);
+        if (!perm.isEmpty() && !p.hasPermission(perm)) {
+            String msg = plugin.getConfig().getString("messages.no-category-permission", "No permission.");
+            p.sendMessage(plugin.prefixed(msg));
+            return;
+        }
         plugin.menus().openItems(p, clean);
     }
 

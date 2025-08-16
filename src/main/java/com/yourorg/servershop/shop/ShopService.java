@@ -19,8 +19,13 @@ public final class ShopService {
         if (opt.isEmpty() || !opt.get().canBuy()) return Optional.of(msg("not-for-sale").replace("%material%", mat.name()));
         String cat = plugin.catalog().categoryOf(mat);
         if (!plugin.categorySettings().isEnabled(cat)) return Optional.of("Category disabled: "+cat);
+        String perm = plugin.categorySettings().permission(cat);
+        if (!perm.isEmpty() && !p.hasPermission(perm)) return Optional.of(msg("no-category-permission"));
         double unit = plugin.dynamic().buyPrice(mat, opt.get().buyPrice());
         double total = unit * qty;
+        double tax = total * plugin.getConfig().getDouble("surcharge.buy.tax", 0.0);
+        double fee = plugin.getConfig().getDouble("surcharge.buy.fee", 0.0);
+        total += tax + fee;
         var econ = plugin.economy();
         if (econ.getBalance(p) + 1e-9 < total) {
             double need = Math.max(0, total - econ.getBalance(p));
@@ -42,10 +47,15 @@ public final class ShopService {
         if (opt.isEmpty() || !opt.get().canSell()) return Optional.of(msg("not-sellable").replace("%material%", mat.name()));
         String cat = plugin.catalog().categoryOf(mat);
         if (!plugin.categorySettings().isEnabled(cat)) return Optional.of("Category disabled: "+cat);
+        String perm = plugin.categorySettings().permission(cat);
+        if (!perm.isEmpty() && !p.hasPermission(perm)) return Optional.of(msg("no-category-permission"));
         int removed = removeFromInventory(p, mat, qty);
         if (removed <= 0) return Optional.of("You don't have that.");
         double unit = plugin.dynamic().sellPrice(mat, opt.get().sellPrice());
         double total = unit * removed;
+        double tax = total * plugin.getConfig().getDouble("surcharge.sell.tax", 0.0);
+        double fee = plugin.getConfig().getDouble("surcharge.sell.fee", 0.0);
+        total = Math.max(0, total - tax - fee);
         plugin.economy().depositPlayer(p, total);
         plugin.dynamic().adjustOnSell(mat, removed);
         plugin.logger().logAsync(new Transaction(Instant.now(), p.getName(), Transaction.Type.SELL, mat, removed, total));
@@ -55,12 +65,18 @@ public final class ShopService {
 
     public double priceBuy(Material mat) {
         var e = plugin.catalog().get(mat).orElse(null); if (e == null || !e.canBuy()) return -1;
-        return plugin.dynamic().buyPrice(mat, e.buyPrice());
+        double base = plugin.dynamic().buyPrice(mat, e.buyPrice());
+        double tax = base * plugin.getConfig().getDouble("surcharge.buy.tax", 0.0);
+        double fee = plugin.getConfig().getDouble("surcharge.buy.fee", 0.0);
+        return base + tax + fee;
     }
 
     public double priceSell(Material mat) {
         var e = plugin.catalog().get(mat).orElse(null); if (e == null || !e.canSell()) return -1;
-        return plugin.dynamic().sellPrice(mat, e.sellPrice());
+        double base = plugin.dynamic().sellPrice(mat, e.sellPrice());
+        double tax = base * plugin.getConfig().getDouble("surcharge.sell.tax", 0.0);
+        double fee = plugin.getConfig().getDouble("surcharge.sell.fee", 0.0);
+        return Math.max(0, base - tax - fee);
     }
 
     private int removeFromInventory(Player p, Material mat, int qty) {

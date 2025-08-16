@@ -14,7 +14,7 @@ public final class MenuManager implements Listener {
 
     public MenuManager(ServerShopPlugin plugin) { this.plugin = plugin; }
 
-    public void openCategories(Player p) { open(p, new CategoryMenu(plugin)); }
+    public void openCategories(Player p) { open(p, new CategoryMenu(plugin, p)); }
     public void openItems(Player p, String category) { open(p, new ItemsMenu(plugin, category)); }
     public void openWeekly(Player p) { if (p!=null) open(p, new WeeklyMenu(plugin)); }
     public void openSell(Player p) { open(p, new SellMenu(plugin)); }
