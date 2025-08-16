@@ -45,3 +45,10 @@ gui:
     categories: 3
     items: 6
     sell: 6
+rankMultipliers:
+  default:
+    buy: 1.0
+    sell: 1.0
+  VIP:
+    buy: 0.95
+    sell: 1.05

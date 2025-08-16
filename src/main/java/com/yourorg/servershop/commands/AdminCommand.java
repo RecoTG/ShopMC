@@ -17,7 +17,12 @@ public final class AdminCommand {
         switch (args[1].toLowerCase()) {
             case "category": return handleCategory(sender, slice(args, 2));
             case "import": return handleImport(sender);
-            case "reload": plugin.reloadConfig(); plugin.catalog().reload(); sender.sendMessage(plugin.prefixed("Reloaded.")); return true;
+            case "reload":
+                plugin.reloadConfig();
+                plugin.catalog().reload();
+                plugin.rankMultipliers().reload();
+                sender.sendMessage(plugin.prefixed("Reloaded."));
+                return true;
             default: help(sender); return true;
         }
     }

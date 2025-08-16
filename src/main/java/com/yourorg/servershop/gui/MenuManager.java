@@ -22,7 +22,7 @@ public final class MenuManager implements Listener {
     public void openSearch(Player p, String query, java.util.List<org.bukkit.Material> results, int page) { open(p, new SearchMenu(plugin, query, results, page)); }
 
     private void open(Player p, MenuView view) {
-        Inventory inv = view.build();
+        Inventory inv = view.build(p);
         open.put(p.getUniqueId(), view);
         p.openInventory(inv);
     }

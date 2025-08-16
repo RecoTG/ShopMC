@@ -3,6 +3,7 @@ main: com.yourorg.servershop.ServerShopPlugin
 version: 1.2.0
 api-version: '1.20'
 depend: [Vault]
+softdepend: [LuckPerms]
 author: yourorg
 description: Dynamic server shop with GUIs, MySQL logging, importer, and per-item dynamic pricing.
 commands:

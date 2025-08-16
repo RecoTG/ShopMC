@@ -20,7 +20,7 @@ public final class ShopService {
         String cat = plugin.catalog().categoryOf(mat);
         if (!plugin.categorySettings().isEnabled(cat)) return Optional.of("Category disabled: "+cat);
         double unit = plugin.dynamic().buyPrice(mat, opt.get().buyPrice());
-        double total = unit * qty;
+        double total = unit * qty * plugin.rankMultipliers().buyMultiplier(p);
         var econ = plugin.economy();
         if (econ.getBalance(p) + 1e-9 < total) {
             double need = Math.max(0, total - econ.getBalance(p));
@@ -45,7 +45,7 @@ public final class ShopService {
         int removed = removeFromInventory(p, mat, qty);
         if (removed <= 0) return Optional.of("You don't have that.");
         double unit = plugin.dynamic().sellPrice(mat, opt.get().sellPrice());
-        double total = unit * removed;
+        double total = unit * removed * plugin.rankMultipliers().sellMultiplier(p);
         plugin.economy().depositPlayer(p, total);
         plugin.dynamic().adjustOnSell(mat, removed);
         plugin.logger().logAsync(new Transaction(Instant.now(), p.getName(), Transaction.Type.SELL, mat, removed, total));
@@ -58,9 +58,19 @@ public final class ShopService {
         return plugin.dynamic().buyPrice(mat, e.buyPrice());
     }
 
+    public double priceBuy(Player p, Material mat) {
+        double base = priceBuy(mat);
+        return base < 0 ? base : base * plugin.rankMultipliers().buyMultiplier(p);
+    }
+
     public double priceSell(Material mat) {
         var e = plugin.catalog().get(mat).orElse(null); if (e == null || !e.canSell()) return -1;
         return plugin.dynamic().sellPrice(mat, e.sellPrice());
+    }
+
+    public double priceSell(Player p, Material mat) {
+        double base = priceSell(mat);
+        return base < 0 ? base : base * plugin.rankMultipliers().sellMultiplier(p);
     }
 
     private int removeFromInventory(Player p, Material mat, int qty) {

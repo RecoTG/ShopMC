@@ -14,11 +14,15 @@ public final class SellMenu implements MenuView {
     private final ServerShopPlugin plugin;
     public SellMenu(ServerShopPlugin plugin) { this.plugin = plugin; }
 
-    @Override public Inventory build() {
-        return Bukkit.createInventory(null, 6*9, title());
+    @Override
+    public Inventory build(Player viewer) {
+        Inventory inv = Bukkit.createInventory(null, 6*9, title());
+        populate(inv, viewer);
+        return inv;
     }
 
-    @Override public void onClick(InventoryClickEvent e) {
+    @Override
+    public void onClick(InventoryClickEvent e) {
         if (!(e.getWhoClicked() instanceof Player p)) return;
         var it = e.getCurrentItem(); if (it == null) return;
         var m = it.getType(); if (m == Material.AIR) return;
@@ -30,22 +34,30 @@ public final class SellMenu implements MenuView {
         refresh(p);
     }
 
-    @Override public String title() { return plugin.getConfig().getString("gui.titles.sell", "Sell Items"); }
+    @Override
+    public String title() { return plugin.getConfig().getString("gui.titles.sell", "Sell Items"); }
 
     public void refresh(Player p) {
-        Inventory inv = p.getOpenInventory().getTopInventory();
+        populate(p.getOpenInventory().getTopInventory(), p);
+    }
+
+    private void populate(Inventory inv, Player p) {
         inv.clear();
-        java.util.Map<Material, Integer> map = new java.util.TreeMap<>(java.util.Comparator.comparing(Enum::name));
+        Map<Material, Integer> map = new TreeMap<>(Comparator.comparing(Enum::name));
         for (ItemStack s : p.getInventory().getContents()) {
-            if (s == null) continue; var m = s.getType();
-            var e = plugin.catalog().get(m).orElse(null); if (e == null || !e.canSell()) continue;
+            if (s == null) continue;
+            var m = s.getType();
+            var e = plugin.catalog().get(m).orElse(null);
+            if (e == null || !e.canSell()) continue;
             map.put(m, map.getOrDefault(m, 0) + s.getAmount());
         }
         int i = 10;
         for (var ent : map.entrySet()) {
-            double unit = plugin.shop().priceSell(ent.getKey());
+            double unit = plugin.shop().priceSell(p, ent.getKey());
             inv.setItem(i, GuiUtil.item(ent.getKey().isItem()?ent.getKey():Material.PAPER, "&a"+ent.getKey().name(), GuiUtil.lore(
-                    "&7Unit: &6$"+String.format("%.2f", unit), "&7You have: &e"+ent.getValue(), "&8Click: sell stack  |  Shift: sell all of this")));
+                    "&7Unit: &6$"+String.format("%.2f", unit),
+                    "&7You have: &e"+ent.getValue(),
+                    "&8Click: sell stack  |  Shift:sell all of this")));
             i += (i % 9 == 7) ? 3 : 1;
         }
         inv.setItem(6*9-5, GuiUtil.item(Material.BARRIER, "&cSell All", GuiUtil.lore("&7Sells every sellable item")));
@@ -55,10 +67,12 @@ public final class SellMenu implements MenuView {
         double total = 0.0; int stacks = 0;
         for (int i = 0; i < p.getInventory().getSize(); i++) {
             ItemStack s = p.getInventory().getItem(i);
-            if (s == null) continue; var m = s.getType();
-            var e = plugin.catalog().get(m).orElse(null); if (e == null || !e.canSell()) continue;
+            if (s == null) continue;
+            var m = s.getType();
+            var e = plugin.catalog().get(m).orElse(null);
+            if (e == null || !e.canSell()) continue;
             int qty = s.getAmount();
-            double unit = plugin.shop().priceSell(m);
+            double unit = plugin.shop().priceSell(p, m);
             double amount = unit * qty;
             total += amount; stacks++;
             p.getInventory().setItem(i, null);

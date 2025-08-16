@@ -20,7 +20,7 @@ public final class SearchMenu implements MenuView {
         this.plugin = plugin; this.query = query; this.results = results; this.page = Math.max(0, page);
     }
 
-    @Override public Inventory build() {
+    @Override public Inventory build(Player viewer) {
         Inventory inv = Bukkit.createInventory(null, 6*9, title());
         int start = page * PAGE_SIZE;
         int end = Math.min(results.size(), start + PAGE_SIZE);
@@ -28,8 +28,8 @@ public final class SearchMenu implements MenuView {
         for (int idx = start; idx < end; idx++) {
             Material m = results.get(idx);
             if (!plugin.categorySettings().isEnabled(plugin.catalog().categoryOf(m))) continue;
-            double buy = plugin.shop().priceBuy(m);
-            double sell = plugin.shop().priceSell(m);
+            double buy = plugin.shop().priceBuy(viewer, m);
+            double sell = plugin.shop().priceSell(viewer, m);
             inv.setItem(i, GuiUtil.item(m.isItem()?m:Material.PAPER, "&e"+m.name(), GuiUtil.lore(
                     "&7Buy: &a$"+String.format("%.2f", buy),
                     "&7Sell: &6$"+(sell>0?String.format("%.2f", sell):"-"),
@@ -51,7 +51,7 @@ public final class SearchMenu implements MenuView {
         if (name.equalsIgnoreCase("Next Page")) { plugin.menus().openSearch(p, query, results, page+1); return; }
         var m = org.bukkit.Material.matchMaterial(org.bukkit.ChatColor.stripColor(it.getItemMeta().getDisplayName()));
         if (m == null) return;
-        if (e.isRightClick()) { double buy = plugin.shop().priceBuy(m); p.sendMessage(plugin.prefixed(m.name()+": $"+String.format("%.2f", buy))); return; }
+        if (e.isRightClick()) { double buy = plugin.shop().priceBuy(p, m); p.sendMessage(plugin.prefixed(m.name()+": $"+String.format("%.2f", buy))); return; }
         int qty = e.isShiftClick() ? 16 : 1;
         plugin.shop().buy(p, m, qty).ifPresent(err -> p.sendMessage(plugin.prefixed(err)));
     }

@@ -13,14 +13,14 @@ public final class ItemsMenu implements MenuView {
     private final ServerShopPlugin plugin; private final String category;
     public ItemsMenu(ServerShopPlugin plugin, String category) { this.plugin = plugin; this.category = category; }
 
-    @Override public Inventory build() {
+    @Override public Inventory build(Player viewer) {
         int rows = Math.max(1, plugin.getConfig().getInt("gui.rows.items", 6));
         Inventory inv = Bukkit.createInventory(null, rows*9, title());
         var mats = plugin.catalog().categories().getOrDefault(category, List.of());
         int i = 10;
         for (var m : mats) {
-            double buy = plugin.shop().priceBuy(m);
-            double sell = plugin.shop().priceSell(m);
+            double buy = plugin.shop().priceBuy(viewer, m);
+            double sell = plugin.shop().priceSell(viewer, m);
             inv.setItem(i, GuiUtil.item(m.isItem() ? m : Material.BOOK, "&e"+m.name(), GuiUtil.lore(
                     "&7Buy: &a$"+String.format("%.2f", buy),
                     "&7Sell: &6$"+(sell>0?String.format("%.2f", sell):"-"),
@@ -40,7 +40,7 @@ public final class ItemsMenu implements MenuView {
         var m = org.bukkit.Material.matchMaterial(org.bukkit.ChatColor.stripColor(it.getItemMeta().getDisplayName()));
         if (m == null) return;
         if (e.isRightClick()) {
-            double buy = plugin.shop().priceBuy(m);
+            double buy = plugin.shop().priceBuy(p, m);
             p.sendMessage(plugin.prefixed(m.name()+": $"+String.format("%.2f", buy)));
             return;
         }

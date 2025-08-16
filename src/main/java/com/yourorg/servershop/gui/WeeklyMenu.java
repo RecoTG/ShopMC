@@ -11,11 +11,11 @@ public final class WeeklyMenu implements MenuView {
     private final ServerShopPlugin plugin;
     public WeeklyMenu(ServerShopPlugin plugin) { this.plugin = plugin; }
 
-    @Override public Inventory build() {
+    @Override public Inventory build(Player viewer) {
         Inventory inv = Bukkit.createInventory(null, 6*9, title());
         int i = 10;
         for (var m : plugin.weekly().currentPicks()) {
-            double price = plugin.shop().priceBuy(m);
+            double price = plugin.shop().priceBuy(viewer, m);
             inv.setItem(i, GuiUtil.item(m.isItem()?m:Material.BOOK, "&b"+m.name(), GuiUtil.lore(
                     "&7Weekly price: &a$"+String.format("%.2f", price),
                     "&8Left-click: buy 1  |  Shift-left: buy 16")));
