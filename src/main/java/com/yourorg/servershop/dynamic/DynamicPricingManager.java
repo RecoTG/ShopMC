@@ -5,9 +5,13 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 
 public final class DynamicPricingManager {
+    private static final double MAX_DELTA = 0.5;
+    private static final long ADJUST_COOLDOWN_MS = 3_000L;
+
     private final ServerShopPlugin plugin;
     private final PriceStorage storage;
     private final java.util.Map<Material, PriceState> map = new java.util.EnumMap<>(Material.class);
+    private final java.util.Map<Material, Long> lastAdjustMs = new java.util.EnumMap<>(Material.class);
     private final boolean enabled;
     private final double initMult, minMult, maxMult, buyStep, sellStep, perHourTowards1;
     private final boolean decayEnabled;
@@ -76,17 +80,27 @@ public final class DynamicPricingManager {
 
     public synchronized void adjustOnBuy(Material m, int qty) {
         if (!enabled) return;
-        PriceState st = map.computeIfAbsent(m, k -> new PriceState(initMult, System.currentTimeMillis()));
-        st.multiplier = clampMult(st.multiplier + buyStep * qty);
-        st.lastUpdateMs = System.currentTimeMillis();
+        long now = System.currentTimeMillis();
+        Long last = lastAdjustMs.get(m);
+        if (last != null && now - last < ADJUST_COOLDOWN_MS) return;
+        lastAdjustMs.put(m, now);
+        PriceState st = map.computeIfAbsent(m, k -> new PriceState(initMult, now));
+        double delta = clampDelta(buyStep * qty);
+        st.multiplier = clampMult(st.multiplier + delta);
+        st.lastUpdateMs = now;
         saveLater(m, st);
     }
 
     public synchronized void adjustOnSell(Material m, int qty) {
         if (!enabled) return;
-        PriceState st = map.computeIfAbsent(m, k -> new PriceState(initMult, System.currentTimeMillis()));
-        st.multiplier = clampMult(st.multiplier - sellStep * qty);
-        st.lastUpdateMs = System.currentTimeMillis();
+        long now = System.currentTimeMillis();
+        Long last = lastAdjustMs.get(m);
+        if (last != null && now - last < ADJUST_COOLDOWN_MS) return;
+        lastAdjustMs.put(m, now);
+        PriceState st = map.computeIfAbsent(m, k -> new PriceState(initMult, now));
+        double delta = clampDelta(-sellStep * qty);
+        st.multiplier = clampMult(st.multiplier + delta);
+        st.lastUpdateMs = now;
         saveLater(m, st);
     }
 
@@ -111,6 +125,7 @@ public final class DynamicPricingManager {
 
     private double clampToBounds(double value, double base) { return plugin.catalog().priceModel().clampToBounds(value, base); }
     private double clampMult(double mult) { return Math.max(minMult, Math.min(maxMult, mult)); }
+    private double clampDelta(double delta) { return Math.max(-MAX_DELTA, Math.min(MAX_DELTA, delta)); }
 
     private double currentMultiplier(Material m) {
         PriceState st = map.computeIfAbsent(m, k -> new PriceState(initMult, System.currentTimeMillis()));
