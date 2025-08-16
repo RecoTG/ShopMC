@@ -8,6 +8,9 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
+import com.yourorg.servershop.logging.Transaction;
+
+import java.time.Instant;
 import java.util.*;
 
 public final class SellMenu implements MenuView {
@@ -53,6 +56,7 @@ public final class SellMenu implements MenuView {
 
     private void sellAll(Player p) {
         double total = 0.0; int stacks = 0;
+        List<Transaction> txs = new ArrayList<>();
         for (int i = 0; i < p.getInventory().getSize(); i++) {
             ItemStack s = p.getInventory().getItem(i);
             if (s == null) continue; var m = s.getType();
@@ -62,11 +66,12 @@ public final class SellMenu implements MenuView {
             double amount = unit * qty;
             total += amount; stacks++;
             p.getInventory().setItem(i, null);
-            plugin.logger().logAsync(new com.yourorg.servershop.logging.Transaction(java.time.Instant.now(), p.getName(), com.yourorg.servershop.logging.Transaction.Type.SELL, m, qty, amount));
-            // TODO: consider calling plugin.dynamic().adjustOnSell(m, qty) per TODO list
+            plugin.dynamic().adjustOnSell(m, qty);
+            txs.add(new Transaction(Instant.now(), p.getName(), Transaction.Type.SELL, m, qty, amount));
         }
         if (total > 0) plugin.economy().depositPlayer(p, total);
         p.sendMessage(plugin.prefixed(plugin.getConfig().getString("messages.soldall").replace("%count%", String.valueOf(stacks)).replace("%total%", String.format("%.2f", total))));
+        txs.forEach(plugin.logger()::logAsync);
         refresh(p);
     }
 
