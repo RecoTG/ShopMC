@@ -1,3 +1,5 @@
+metrics:
+  enabled: true
 messages:
   prefix: '&6[Shop] &7'
 weekly:
