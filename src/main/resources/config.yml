@@ -1,3 +1,4 @@
+checkUpdates: false  # Check for plugin updates on startup
 messages:
   prefix: '&6[Shop] &7'
 weekly:
