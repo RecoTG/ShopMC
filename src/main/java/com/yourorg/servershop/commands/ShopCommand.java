@@ -30,15 +30,32 @@ public final class ShopCommand implements TabExecutor {
     }
 
     private boolean search(CommandSender sender, String[] args) {
-        if (args.length < 2) { sender.sendMessage(plugin.prefixed("/shop search <name> [page]")); return true; }
+        if (args.length < 2) { sender.sendMessage(plugin.prefixed("/shop search <name> [page] [cat:<category>]")); return true; }
         int pageArg = 1;
         java.util.List<String> parts = new java.util.ArrayList<>(java.util.Arrays.asList(args).subList(1, args.length));
         try { int maybe = Integer.parseInt(parts.get(parts.size()-1)); if (maybe > 0) { pageArg = maybe; parts.remove(parts.size()-1); } } catch (Exception ignored) {}
+        String category = null;
+        java.util.Iterator<String> it = parts.iterator();
+        while (it.hasNext()) {
+            String part = it.next();
+            String low = part.toLowerCase(java.util.Locale.ROOT);
+            if (low.startsWith("cat:") || low.startsWith("category:") || low.startsWith("cat=") || low.startsWith("category=")) {
+                int idx = low.indexOf(':');
+                if (idx < 0) idx = low.indexOf('=');
+                category = low.substring(idx+1);
+                it.remove();
+            }
+        }
         String q = String.join(" ", parts).trim();
         if (q.isEmpty()) { sender.sendMessage(plugin.prefixed("Please provide a search term.")); return true; }
 
         java.util.Set<Material> allowed = new java.util.TreeSet<>(plugin.catalog().allMaterials());
-        java.util.List<Material> mats = Fuzzy.rankMaterials(allowed, q, 500, 0.45);
+        if (category != null) {
+            String match = plugin.catalog().categories().keySet().stream().filter(c -> c.equalsIgnoreCase(category)).findFirst().orElse(null);
+            if (match == null) { sender.sendMessage(plugin.prefixed("Unknown category.")); return true; }
+            allowed.retainAll(plugin.catalog().categories().get(match));
+        }
+        java.util.List<Material> mats = Fuzzy.rankMaterials(allowed, m -> plugin.catalog().searchNames(m), q, 500, 0.45);
         java.util.List<Material> enabled = mats.stream().filter(m -> plugin.categorySettings().isEnabled(plugin.catalog().categoryOf(m))).collect(java.util.stream.Collectors.toList());
         if (enabled.isEmpty()) { sender.sendMessage(plugin.prefixed("No matches.")); return true; }
 
@@ -52,7 +69,7 @@ public final class ShopCommand implements TabExecutor {
                 Material m = enabled.get(i);
                 var e = plugin.catalog().get(m).orElse(null); if (e == null) continue;
                 double price = plugin.shop().priceBuy(m);
-                sender.sendMessage(" - "+m.name()+": $"+String.format("%.2f", price));
+                sender.sendMessage(" - "+plugin.catalog().displayName(m)+": $"+String.format("%.2f", price));
             }
         }
         return true;

@@ -45,12 +45,19 @@ public final class Fuzzy {
     }
 
     public static java.util.List<Material> rankMaterials(java.util.Collection<Material> mats, String query, int limit, double threshold) {
+        return rankMaterials(mats, m -> java.util.List.of(m.name()), query, limit, threshold);
+    }
+
+    public static java.util.List<Material> rankMaterials(java.util.Collection<Material> mats, java.util.function.Function<Material, ? extends java.util.Collection<String>> names, String query, int limit, double threshold) {
         String q = normalize(query);
         java.util.List<MaterialScore> list = new java.util.ArrayList<>();
         for (Material m : mats) {
-            String name = m.name();
-            double s = similarity(q, name);
-            if (s >= threshold) list.add(new MaterialScore(m, s));
+            double best = 0.0;
+            for (String n : names.apply(m)) {
+                double s = similarity(q, n);
+                if (s > best) best = s;
+            }
+            if (best >= threshold) list.add(new MaterialScore(m, best));
         }
         list.sort((a,b)->{
             int c = Double.compare(b.s, a.s);
