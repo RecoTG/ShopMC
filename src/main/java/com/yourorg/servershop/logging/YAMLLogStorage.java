@@ -1,6 +1,7 @@
 package com.yourorg.servershop.logging;
 
 import org.bukkit.configuration.file.YamlConfiguration;
+import com.yourorg.servershop.util.Money;
 
 import java.io.File;
 
@@ -21,7 +22,7 @@ public final class YAMLLogStorage implements LogStorage {
         row.put("type", tx.type.name());
         row.put("material", tx.material.name());
         row.put("quantity", tx.quantity);
-        row.put("amount", tx.amount);
+        row.put("amount", Money.fmt(tx.amount));
         entries.add(row);
         while (entries.size() > maxEntries) entries.remove(0);
         y.set("entries", entries);
@@ -46,7 +47,7 @@ public final class YAMLLogStorage implements LogStorage {
                     Transaction.Type.valueOf(String.valueOf(e.get("type"))),
                     org.bukkit.Material.matchMaterial(String.valueOf(e.get("material"))),
                     ((Number) e.get("quantity")).intValue(),
-                    ((Number) e.get("amount")).doubleValue()
+                    Money.money(e.get("amount")).doubleValue()
             );
             list.add(t);
         }

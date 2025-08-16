@@ -2,6 +2,7 @@ package com.yourorg.servershop.shop;
 
 import com.yourorg.servershop.ServerShopPlugin;
 import com.yourorg.servershop.logging.Transaction;
+import com.yourorg.servershop.util.Money;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -19,12 +20,12 @@ public final class ShopService {
         if (opt.isEmpty() || !opt.get().canBuy()) return Optional.of(msg("not-for-sale").replace("%material%", mat.name()));
         String cat = plugin.catalog().categoryOf(mat);
         if (!plugin.categorySettings().isEnabled(cat)) return Optional.of("Category disabled: "+cat);
-        double unit = plugin.dynamic().buyPrice(mat, opt.get().buyPrice());
-        double total = unit * qty;
+        double unit = Money.money(plugin.dynamic().buyPrice(mat, opt.get().buyPrice())).doubleValue();
+        double total = Money.money(unit * qty).doubleValue();
         var econ = plugin.economy();
         if (econ.getBalance(p) + 1e-9 < total) {
             double need = Math.max(0, total - econ.getBalance(p));
-            return Optional.of(msg("not-enough-money").replace("%amount%", fmt(need)));
+            return Optional.of(msg("not-enough-money").replace("%amount%", Money.fmt(need)));
         }
         var r = econ.withdrawPlayer(p, total);
         if (!r.transactionSuccess()) return Optional.of("Payment failed: " + r.errorMessage);
@@ -33,7 +34,7 @@ public final class ShopService {
         if (!left.isEmpty()) { econ.depositPlayer(p, total); return Optional.of("Inventory full."); }
         plugin.dynamic().adjustOnBuy(mat, qty);
         plugin.logger().logAsync(new Transaction(Instant.now(), p.getName(), Transaction.Type.BUY, mat, qty, total));
-        p.sendMessage(plugin.prefixed(msg("purchased").replace("%qty%", String.valueOf(qty)).replace("%material%", mat.name()).replace("%price%", fmt(total))));
+        p.sendMessage(plugin.prefixed(msg("purchased").replace("%qty%", String.valueOf(qty)).replace("%material%", mat.name()).replace("%price%", Money.fmt(total))));
         return Optional.empty();
     }
 
@@ -44,23 +45,23 @@ public final class ShopService {
         if (!plugin.categorySettings().isEnabled(cat)) return Optional.of("Category disabled: "+cat);
         int removed = removeFromInventory(p, mat, qty);
         if (removed <= 0) return Optional.of("You don't have that.");
-        double unit = plugin.dynamic().sellPrice(mat, opt.get().sellPrice());
-        double total = unit * removed;
+        double unit = Money.money(plugin.dynamic().sellPrice(mat, opt.get().sellPrice())).doubleValue();
+        double total = Money.money(unit * removed).doubleValue();
         plugin.economy().depositPlayer(p, total);
         plugin.dynamic().adjustOnSell(mat, removed);
         plugin.logger().logAsync(new Transaction(Instant.now(), p.getName(), Transaction.Type.SELL, mat, removed, total));
-        p.sendMessage(plugin.prefixed(msg("sold").replace("%qty%", String.valueOf(removed)).replace("%material%", mat.name()).replace("%price%", fmt(total))));
+        p.sendMessage(plugin.prefixed(msg("sold").replace("%qty%", String.valueOf(removed)).replace("%material%", mat.name()).replace("%price%", Money.fmt(total))));
         return Optional.empty();
     }
 
     public double priceBuy(Material mat) {
         var e = plugin.catalog().get(mat).orElse(null); if (e == null || !e.canBuy()) return -1;
-        return plugin.dynamic().buyPrice(mat, e.buyPrice());
+        return Money.money(plugin.dynamic().buyPrice(mat, e.buyPrice())).doubleValue();
     }
 
     public double priceSell(Material mat) {
         var e = plugin.catalog().get(mat).orElse(null); if (e == null || !e.canSell()) return -1;
-        return plugin.dynamic().sellPrice(mat, e.sellPrice());
+        return Money.money(plugin.dynamic().sellPrice(mat, e.sellPrice())).doubleValue();
     }
 
     private int removeFromInventory(Player p, Material mat, int qty) {
@@ -77,6 +78,5 @@ public final class ShopService {
         return qty - remaining;
     }
 
-    private static String fmt(double v) { return String.format("%.2f", v); }
     private String msg(String key) { return plugin.getConfig().getString("messages." + key, key); }
 }

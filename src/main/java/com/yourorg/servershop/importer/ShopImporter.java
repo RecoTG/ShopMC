@@ -1,6 +1,7 @@
 package com.yourorg.servershop.importer;
 
 import com.yourorg.servershop.ServerShopPlugin;
+import com.yourorg.servershop.util.Money;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -94,8 +95,8 @@ public final class ShopImporter {
                 double[] pr = familyPrice.getOrDefault(fam, new double[]{Double.NaN, Double.NaN});
                 if (Double.isNaN(pr[0]) && Double.isNaN(pr[1])) continue;
                 String path = "categories."+outCatKey+"."+m.name();
-                if (!Double.isNaN(pr[0])) out.set(path+".buy", round2(pr[0]));
-                if (!Double.isNaN(pr[1])) out.set(path+".sell", round2(pr[1]));
+                if (!Double.isNaN(pr[0])) out.set(path+".buy", Money.fmt(pr[0]));
+                if (!Double.isNaN(pr[1])) out.set(path+".sell", Money.fmt(pr[1]));
             }
         }
         try { out.save(new File(plugin.getDataFolder(), "shop.yml")); }
@@ -103,7 +104,6 @@ public final class ShopImporter {
         return out.getKeys(true).size();
     }
 
-    private static double round2(double v) { return Math.round(v*100.0)/100.0; }
     private static double firstAmount(ConfigurationSection prices) {
         if (prices == null) return Double.NaN;
         for (String k : new TreeSet<>(prices.getKeys(false))) {

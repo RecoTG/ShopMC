@@ -2,6 +2,7 @@ package com.yourorg.servershop.config;
 
 import com.yourorg.servershop.ServerShopPlugin;
 import org.bukkit.configuration.file.YamlConfiguration;
+import java.math.BigDecimal;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,7 +38,8 @@ public final class CategorySettings {
         for (String k : y.getConfigurationSection("categories").getKeys(false)) {
             Entry e = new Entry();
             e.enabled = y.getBoolean("categories."+k+".enabled", true);
-            e.multiplier = y.getDouble("categories."+k+".multiplier", 1.0);
+            Object mObj = y.get("categories."+k+".multiplier");
+            e.multiplier = mObj == null ? 1.0 : new BigDecimal(String.valueOf(mObj)).doubleValue();
             map.put(k, e);
         }
     }
@@ -46,7 +48,7 @@ public final class CategorySettings {
         YamlConfiguration y = new YamlConfiguration();
         for (String k : map.keySet()) {
             y.set("categories."+k+".enabled", map.get(k).enabled);
-            y.set("categories."+k+".multiplier", map.get(k).multiplier);
+            y.set("categories."+k+".multiplier", BigDecimal.valueOf(map.get(k).multiplier).toPlainString());
         }
         try { y.save(file); } catch (IOException e) { plugin.getLogger().warning("Failed to save categories.yml: "+e.getMessage()); }
     }
