@@ -30,7 +30,13 @@ public final class WeeklyMenu implements MenuView {
         var m = org.bukkit.Material.matchMaterial(org.bukkit.ChatColor.stripColor(it.getItemMeta().getDisplayName()));
         if (m == null) return;
         int qty = e.isShiftClick() ? 16 : 1;
-        plugin.shop().buy(p, m, qty).ifPresent(err -> p.sendMessage(plugin.prefixed(err)));
+        double total = plugin.shop().priceBuy(m) * qty;
+        double threshold = plugin.getConfig().getDouble("gui.confirmThreshold", 1000.0);
+        if (total >= threshold) {
+            plugin.menus().openConfirm(p, m, qty, pl -> plugin.menus().openWeekly(pl));
+        } else {
+            plugin.shop().buy(p, m, qty).ifPresent(err -> p.sendMessage(plugin.prefixed(err)));
+        }
     }
 
     @Override public String title() { return plugin.getConfig().getString("gui.titles.weekly", "Weekly Picks"); }

@@ -36,11 +36,13 @@ dynamicPricing:
     perHourTowards1: 0.02
     saveEveryMinutes: 5
 gui:
+  confirmThreshold: 1000.0
   titles:
     categories: '&8Server Shop'
     items: '&8%category%'
     weekly: '&8Weekly Picks'
     sell: '&8Sell Items'
+    confirm: '&8Confirm Purchase'
   rows:
     categories: 3
     items: 6

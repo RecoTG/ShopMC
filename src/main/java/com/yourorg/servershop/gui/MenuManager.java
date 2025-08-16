@@ -14,12 +14,15 @@ public final class MenuManager implements Listener {
 
     public MenuManager(ServerShopPlugin plugin) { this.plugin = plugin; }
 
-    public void openCategories(Player p) { open(p, new CategoryMenu(plugin)); }
-    public void openItems(Player p, String category) { open(p, new ItemsMenu(plugin, category)); }
+    public void openCategories(Player p) { openCategories(p, 0); }
+    public void openCategories(Player p, int page) { open(p, new CategoryMenu(plugin, page)); }
+    public void openItems(Player p, String category) { openItems(p, category, 0); }
+    public void openItems(Player p, String category, int page) { open(p, new ItemsMenu(plugin, category, page)); }
     public void openWeekly(Player p) { if (p!=null) open(p, new WeeklyMenu(plugin)); }
     public void openSell(Player p) { open(p, new SellMenu(plugin)); }
     public void openSearch(Player p, String query, java.util.List<org.bukkit.Material> results) { open(p, new SearchMenu(plugin, query, results, 0)); }
     public void openSearch(Player p, String query, java.util.List<org.bukkit.Material> results, int page) { open(p, new SearchMenu(plugin, query, results, page)); }
+    public void openConfirm(Player p, org.bukkit.Material mat, int qty, java.util.function.Consumer<Player> back) { open(p, new ConfirmMenu(plugin, mat, qty, back)); }
 
     private void open(Player p, MenuView view) {
         Inventory inv = view.build();
