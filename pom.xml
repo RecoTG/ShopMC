@@ -12,7 +12,8 @@
     <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <paper.version>1.20.6</paper.version>
+    <maven.compiler.encoding>UTF-8</maven.compiler.encoding>
+
   </properties>
 
   <repositories>
@@ -29,8 +30,8 @@
       <url>https://oss.sonatype.org/content/groups/public/</url>
     </repository>
     <repository>
-      <id>jitpack.io</id>
-      <url>https://jitpack.io/</url>
+      <id>jitpack</id>
+      <url>https://jitpack.io</url>
     </repository>
   </repositories>
 
@@ -78,7 +79,7 @@
         <version>3.11.0</version>
         <configuration>
           <release>17</release>
-          <encoding>UTF-8</encoding>
+          <encoding>${maven.compiler.encoding}</encoding>
         </configuration>
       </plugin>
       <plugin>
@@ -141,6 +142,7 @@
             <goals><goal>shade</goal></goals>
             <configuration>
               <minimizeJar>false</minimizeJar>
+
               <relocations>
                 <relocation>
                   <pattern>org.bstats</pattern>
@@ -155,6 +157,9 @@
                   <shadedPattern>com.yourorg.servershop.libs.mysql</shadedPattern>
                 </relocation>
               </relocations>
+              <createDependencyReducedPom>false</createDependencyReducedPom>
+              <relocations/>
+
             </configuration>
           </execution>
         </executions>
