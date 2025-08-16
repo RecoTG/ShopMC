@@ -3,6 +3,9 @@ package com.yourorg.servershop.logging;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
+import java.math.BigDecimal;
+
+import com.yourorg.servershop.util.CurrencyUtil;
 
 public final class YAMLLogStorage implements LogStorage {
     private final File file; private final int maxEntries;
@@ -21,7 +24,7 @@ public final class YAMLLogStorage implements LogStorage {
         row.put("type", tx.type.name());
         row.put("material", tx.material.name());
         row.put("quantity", tx.quantity);
-        row.put("amount", tx.amount);
+        row.put("amount", CurrencyUtil.format(tx.amount));
         entries.add(row);
         while (entries.size() > maxEntries) entries.remove(0);
         y.set("entries", entries);
@@ -40,13 +43,17 @@ public final class YAMLLogStorage implements LogStorage {
             java.util.Map<String, Object> e = entries.get(i);
             String p = String.valueOf(e.get("player"));
             if (playerLower != null && !p.toLowerCase(java.util.Locale.ROOT).equals(playerLower)) continue;
+            Object amtObj = e.get("amount");
+            BigDecimal amt;
+            if (amtObj instanceof Number) amt = CurrencyUtil.bd(((Number) amtObj).doubleValue());
+            else amt = CurrencyUtil.bd(Double.parseDouble(String.valueOf(amtObj)));
             Transaction t = new Transaction(
                     java.time.Instant.ofEpochMilli(((Number) e.get("time")).longValue()),
                     p,
                     Transaction.Type.valueOf(String.valueOf(e.get("type"))),
                     org.bukkit.Material.matchMaterial(String.valueOf(e.get("material"))),
                     ((Number) e.get("quantity")).intValue(),
-                    ((Number) e.get("amount")).doubleValue()
+                    amt
             );
             list.add(t);
         }

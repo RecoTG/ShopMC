@@ -2,6 +2,7 @@ package com.yourorg.servershop.commands;
 
 import com.yourorg.servershop.ServerShopPlugin;
 import com.yourorg.servershop.shop.ItemEntry;
+import com.yourorg.servershop.util.CurrencyUtil;
 import com.yourorg.servershop.util.Fuzzy;
 import org.bukkit.Material;
 import org.bukkit.command.*;
@@ -52,7 +53,7 @@ public final class ShopCommand implements TabExecutor {
                 Material m = enabled.get(i);
                 var e = plugin.catalog().get(m).orElse(null); if (e == null) continue;
                 double price = plugin.shop().priceBuy(m);
-                sender.sendMessage(" - "+m.name()+": $"+String.format("%.2f", price));
+                sender.sendMessage(" - "+m.name()+": $"+CurrencyUtil.format(price));
             }
         }
         return true;
@@ -65,7 +66,7 @@ public final class ShopCommand implements TabExecutor {
         Optional<ItemEntry> opt = plugin.catalog().get(mat);
         if (opt.isEmpty() || !opt.get().canBuy()) { sender.sendMessage(plugin.prefixed(msg("not-for-sale").replace("%material%", mat.name()))); return true; }
         double price = plugin.shop().priceBuy(mat);
-        sender.sendMessage(plugin.prefixed(mat.name() + ": $" + String.format("%.2f", price)));
+        sender.sendMessage(plugin.prefixed(mat.name() + ": $" + CurrencyUtil.format(price)));
         return true;
     }
 

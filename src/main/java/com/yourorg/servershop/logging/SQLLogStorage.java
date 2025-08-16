@@ -30,7 +30,7 @@ public final class SQLLogStorage implements LogStorage {
                     "type VARCHAR(8) NOT NULL," +
                     "material VARCHAR(64) NOT NULL," +
                     "quantity INT NOT NULL," +
-                    "amount DOUBLE NOT NULL," +
+                    "amount DECIMAL(10,2) NOT NULL," +
                     "INDEX idx_player_time (player, time_ms)" +
                     ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
         }
@@ -44,7 +44,7 @@ public final class SQLLogStorage implements LogStorage {
             ps.setString(3, tx.type.name());
             ps.setString(4, tx.material.name());
             ps.setInt(5, tx.quantity);
-            ps.setDouble(6, tx.amount);
+            ps.setBigDecimal(6, tx.amount);
             ps.executeUpdate();
         }
     }
@@ -70,7 +70,7 @@ public final class SQLLogStorage implements LogStorage {
                             Transaction.Type.valueOf(rs.getString(3)),
                             org.bukkit.Material.matchMaterial(rs.getString(4)),
                             rs.getInt(5),
-                            rs.getDouble(6)));
+                            rs.getBigDecimal(6)));
                 }
                 return list;
             }
