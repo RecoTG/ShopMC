@@ -14,6 +14,7 @@ public final class ShopLogCommand implements CommandExecutor {
     public ShopLogCommand(ServerShopPlugin plugin) { this.plugin = plugin; }
 
     @Override public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
+        if (!plugin.checkCommandCooldown(sender)) return true;
         int limit = 10; String player = null;
         if (args.length >= 1) player = args[0];
         if (args.length >= 2) try { limit = Integer.parseInt(args[1]); } catch (Exception ignored) {}

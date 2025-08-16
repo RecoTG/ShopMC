@@ -17,6 +17,7 @@ public final class ShopCommand implements TabExecutor {
     public ShopCommand(ServerShopPlugin plugin) { this.plugin = plugin; this.admin = new AdminCommand(plugin); }
 
     @Override public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
+        if (!plugin.checkCommandCooldown(sender)) return true;
         if (args.length == 0) {
             if (sender instanceof Player p) { plugin.menus().openCategories(p); } else sender.sendMessage(plugin.prefixed(plugin.getConfig().getString("messages.not-a-player")));
             return true;

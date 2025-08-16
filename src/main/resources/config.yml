@@ -1,5 +1,6 @@
 messages:
   prefix: '&6[Shop] &7'
+  cooldown: 'Please wait %seconds%s before using commands again.'
 weekly:
   count: 6
   discount: 0.80
@@ -12,17 +13,17 @@ logging:
   storage: YAML  # YAML or MYSQL
   maxEntries: 1000
 mysql:
-  host: localhost
-  port: 3306
-  database: servershop
-  user: shop
-  password: changeme
-  pool:
-    maxPoolSize: 10
-    minimumIdle: 2
-    connectionTimeoutMs: 10000
-    idleTimeoutMs: 600000
-    maxLifetimeMs: 1800000
+    host: localhost
+    port: 3306
+    database: servershop
+    user: shop
+    password: changeme
+    pool:
+      maxPoolSize: 10
+      minimumIdle: 2
+      connectionTimeoutMs: 10000
+      idleTimeoutMs: 600000
+      maxLifetimeMs: 1800000
 dynamicPricing:
   enabled: true
   storage: YAML   # YAML or MYSQL
@@ -45,3 +46,7 @@ gui:
     categories: 3
     items: 6
     sell: 6
+commands:
+  cooldownSeconds: 1
+metrics:
+  enabled: true
