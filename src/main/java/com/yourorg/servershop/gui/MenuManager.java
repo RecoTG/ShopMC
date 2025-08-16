@@ -17,7 +17,13 @@ public final class MenuManager implements Listener {
     public void openCategories(Player p) { open(p, new CategoryMenu(plugin)); }
     public void openItems(Player p, String category) { open(p, new ItemsMenu(plugin, category)); }
     public void openWeekly(Player p) { if (p!=null) open(p, new WeeklyMenu(plugin)); }
-    public void openSell(Player p) { open(p, new SellMenu(plugin)); }
+    public void openSell(Player p) {
+        if (plugin.economy() == null) {
+            p.sendMessage(plugin.prefixed(plugin.getConfig().getString("messages.no-economy")));
+            return;
+        }
+        open(p, new SellMenu(plugin));
+    }
     public void openSearch(Player p, String query, java.util.List<org.bukkit.Material> results) { open(p, new SearchMenu(plugin, query, results, 0)); }
     public void openSearch(Player p, String query, java.util.List<org.bukkit.Material> results, int page) { open(p, new SearchMenu(plugin, query, results, page)); }
 

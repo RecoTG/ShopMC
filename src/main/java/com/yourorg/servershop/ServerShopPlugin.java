@@ -28,9 +28,7 @@ public final class ServerShopPlugin extends JavaPlugin {
         saveResource("messages.yml", false);
         saveResource("shop.yml", false);
         if (!setupEconomy()) {
-            getLogger().severe("Vault economy not found. Disabling.");
-            Bukkit.getPluginManager().disablePlugin(this);
-            return;
+            getLogger().warning("Vault economy not found. Buy/Sell disabled.");
         }
         this.categorySettings = new CategorySettings(this);
         this.catalog = new Catalog(this); catalog.reload();

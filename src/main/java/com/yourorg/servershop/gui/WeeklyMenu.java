@@ -29,6 +29,7 @@ public final class WeeklyMenu implements MenuView {
         var it = e.getCurrentItem(); if (it == null) return;
         var m = org.bukkit.Material.matchMaterial(org.bukkit.ChatColor.stripColor(it.getItemMeta().getDisplayName()));
         if (m == null) return;
+        if (plugin.economy() == null) { p.sendMessage(plugin.prefixed(plugin.getConfig().getString("messages.no-economy"))); return; }
         int qty = e.isShiftClick() ? 16 : 1;
         plugin.shop().buy(p, m, qty).ifPresent(err -> p.sendMessage(plugin.prefixed(err)));
     }

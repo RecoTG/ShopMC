@@ -22,6 +22,7 @@ public final class SellMenu implements MenuView {
         if (!(e.getWhoClicked() instanceof Player p)) return;
         var it = e.getCurrentItem(); if (it == null) return;
         var m = it.getType(); if (m == Material.AIR) return;
+        if (plugin.economy() == null) { p.sendMessage(plugin.prefixed(plugin.getConfig().getString("messages.no-economy"))); return; }
         if (it.getItemMeta() != null && org.bukkit.ChatColor.stripColor(it.getItemMeta().getDisplayName()).equalsIgnoreCase("Sell All")) {
             sellAll(p); return;
         }
@@ -52,6 +53,7 @@ public final class SellMenu implements MenuView {
     }
 
     private void sellAll(Player p) {
+        if (plugin.economy() == null) { p.sendMessage(plugin.prefixed(plugin.getConfig().getString("messages.no-economy"))); return; }
         double total = 0.0; int stacks = 0;
         for (int i = 0; i < p.getInventory().getSize(); i++) {
             ItemStack s = p.getInventory().getItem(i);
