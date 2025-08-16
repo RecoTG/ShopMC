@@ -14,7 +14,7 @@ public final class ShopImporter {
 
     private static final List<String> DISALLOWED = List.of(
             "SWORD","AXE","PICKAXE","SHOVEL","HOE","SHEARS","FISHING_ROD","FLINT_AND_STEEL",
-            "HELMET","CHESTPLATE","LEGGINGS","BOOTS","SHIELD","ELYTRA",
+            "HELMET","CHESTPLATE","LEGGINGS","BOOTS","SHIELD","ELYTRA","HORSE_ARMOR",
             "BOW","CROSSBOW","TRIDENT",
             "POTION","SPLASH_POTION","LINGERING_POTION","TIPPED_ARROW",
             "ARROW","SPECTRAL_ARROW",
@@ -36,6 +36,7 @@ public final class ShopImporter {
 
     private static boolean disallowed(Material m) {
         String u = m.name();
+        if (u.contains("BOOK") && !u.equals("BOOKSHELF")) return true;
         for (String s : DISALLOWED) if (u.contains(s)) return true;
         for (String s : FOOD) if (u.equals(s) || u.endsWith("_"+s) || u.contains(s)) return true;
         return false;
