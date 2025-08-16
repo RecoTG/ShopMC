@@ -36,7 +36,7 @@ public final class CategoryMenu implements MenuView {
         if (name.contains("Sell")) { plugin.menus().openSell(p); return; }
         String clean = org.bukkit.ChatColor.stripColor(name);
         if (!plugin.categorySettings().isEnabled(clean)) { p.sendMessage(plugin.prefixed("Category disabled.")); return; }
-        plugin.menus().openItems(p, clean);
+        plugin.menus().openItems(p, clean, 0);
     }
 
     @Override public String title() { return plugin.getConfig().getString("gui.titles.categories", "Server Shop"); }
