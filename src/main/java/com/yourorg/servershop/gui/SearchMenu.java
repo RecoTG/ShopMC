@@ -53,7 +53,13 @@ public final class SearchMenu implements MenuView {
         if (m == null) return;
         if (e.isRightClick()) { double buy = plugin.shop().priceBuy(m); p.sendMessage(plugin.prefixed(m.name()+": $"+String.format("%.2f", buy))); return; }
         int qty = e.isShiftClick() ? 16 : 1;
-        plugin.shop().buy(p, m, qty).ifPresent(err -> p.sendMessage(plugin.prefixed(err)));
+        double total = plugin.shop().priceBuy(m) * qty;
+        double threshold = plugin.getConfig().getDouble("gui.confirmThreshold", 1000.0);
+        if (total >= threshold) {
+            plugin.menus().openConfirm(p, m, qty, pl -> plugin.menus().openSearch(pl, query, results, page));
+        } else {
+            plugin.shop().buy(p, m, qty).ifPresent(err -> p.sendMessage(plugin.prefixed(err)));
+        }
     }
 
     @Override public String title() { return plugin.getConfig().getString("gui.titles.items", "%category%").replace("%category%", "Search: "+query+" ("+(page+1)+")"); }
