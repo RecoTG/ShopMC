@@ -7,6 +7,7 @@ import com.yourorg.servershop.shop.*;
 import com.yourorg.servershop.weekly.*;
 import com.yourorg.servershop.dynamic.*;
 import com.yourorg.servershop.config.*;
+import com.yourorg.servershop.util.UpdateChecker;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -50,6 +51,7 @@ public final class ServerShopPlugin extends JavaPlugin {
         getCommand("shoplog").setExecutor(new ShopLogCommand(this));
         getCommand("weeklyshop").setExecutor(new WeeklyShopCommand(this));
         getLogger().info("DynamicServerShop enabled (Importer + Admin + Category multipliers + Fuzzy Search).");
+        if (getConfig().getBoolean("checkUpdates", false)) UpdateChecker.check(this);
     }
 
     @Override public void onDisable() {
