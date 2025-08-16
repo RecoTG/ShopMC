@@ -27,6 +27,7 @@ public final class DynamicPricingManager {
         this.perHourTowards1 = dec.getDouble("perHourTowards1", 0.02);
 
         String mode = dp.getString("storage", "YAML").toUpperCase();
+        long flushSec = c.getLong("yaml.flushEverySeconds", 5L);
         PriceStorage ps;
         if ("MYSQL".equals(mode)) {
             try {
@@ -45,10 +46,10 @@ public final class DynamicPricingManager {
                 plugin.getLogger().info("Dynamic pricing storage: MySQL");
             } catch (Exception e) {
                 plugin.getLogger().warning("MySQL price storage failed, falling back to YAML: " + e.getMessage());
-                ps = new YAMLPriceStorage(plugin.getDataFolder());
+                ps = new YAMLPriceStorage(plugin, flushSec);
             }
         } else {
-            ps = new YAMLPriceStorage(plugin.getDataFolder());
+            ps = new YAMLPriceStorage(plugin, flushSec);
             plugin.getLogger().info("Dynamic pricing storage: YAML");
         }
         this.storage = ps;
@@ -105,8 +106,10 @@ public final class DynamicPricingManager {
         });
     }
 
+    public synchronized void flush() { try { storage.flush(); } catch (Exception ignored) { } }
+
     public synchronized void close() {
-        try { storage.saveAll(map); storage.close(); } catch (Exception ignored) { }
+        try { storage.saveAll(map); storage.flush(); storage.close(); } catch (Exception ignored) { }
     }
 
     private double clampToBounds(double value, double base) { return plugin.catalog().priceModel().clampToBounds(value, base); }
