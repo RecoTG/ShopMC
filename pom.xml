@@ -52,6 +52,11 @@
       <artifactId>mysql-connector-j</artifactId>
       <version>8.4.0</version>
     </dependency>
+    <dependency>
+      <groupId>org.bstats</groupId>
+      <artifactId>bstats-bukkit</artifactId>
+      <version>3.0.2</version>
+    </dependency>
   </dependencies>
 
   <build>
@@ -75,7 +80,27 @@
             <goals><goal>shade</goal></goals>
             <configuration>
               <minimizeJar>false</minimizeJar>
-              <relocations/>
+              <relocations>
+                <relocation>
+                  <pattern>org.bstats</pattern>
+                  <shadedPattern>com.yourorg.servershop.libs.bstats</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>com.zaxxer.hikari</pattern>
+                  <shadedPattern>com.yourorg.servershop.libs.hikari</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>com.mysql.cj</pattern>
+                  <shadedPattern>com.yourorg.servershop.libs.mysql.cj</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>org.slf4j</pattern>
+                  <shadedPattern>com.yourorg.servershop.libs.slf4j</shadedPattern>
+                </relocation>
+              </relocations>
+              <transformers>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+              </transformers>
             </configuration>
           </execution>
         </executions>
