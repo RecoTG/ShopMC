@@ -1,5 +1,6 @@
 messages:
   prefix: '&6[Shop] &7'
+  no-category-permission: 'You do not have access to this category.'
 weekly:
   count: 6
   discount: 0.80
@@ -45,3 +46,10 @@ gui:
     categories: 3
     items: 6
     sell: 6
+surcharge:
+  buy:
+    tax: 0.0
+    fee: 0.0
+  sell:
+    tax: 0.0
+    fee: 0.0

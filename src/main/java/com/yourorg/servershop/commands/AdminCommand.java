@@ -44,8 +44,11 @@ public final class AdminCommand {
             for (String c : plugin.categorySettings().categories()) {
                 boolean en = plugin.categorySettings().isEnabled(c);
                 double m = plugin.categorySettings().multiplier(c);
+                String perm = plugin.categorySettings().permission(c);
                 sb.append(ChatColor.YELLOW).append(c).append(ChatColor.GRAY).append("[")
-                        .append(en?"on":"off").append(", x").append(m).append("] ");
+                        .append(en?"on":"off").append(", x").append(m);
+                if (!perm.isEmpty()) sb.append(", ").append(perm);
+                sb.append("] ");
             }
             sender.sendMessage(sb.toString());
             return true;
@@ -65,10 +68,17 @@ public final class AdminCommand {
             sender.sendMessage(plugin.prefixed("Category "+cat+" is now "+(on?"enabled":"disabled")));
             return true;
         }
+        if (sub.equals("setperm") && args.length >= 3) {
+            String cat = args[1];
+            String perm = args[2].equalsIgnoreCase("none") ? "" : args[2];
+            plugin.categorySettings().setPermission(cat, perm);
+            sender.sendMessage(plugin.prefixed("Set permission for "+cat+" to " + (perm.isEmpty()?"none":perm)));
+            return true;
+        }
         helpCategory(sender); return true;
     }
 
     private static String[] slice(String[] a, int from) { String[] b = new String[Math.max(0, a.length-from)]; System.arraycopy(a, from, b, 0, b.length); return b; }
-    private void help(CommandSender s) { s.sendMessage(plugin.prefixed("/shop admin category <list|setmult|toggle> ... | import | reload")); }
-    private void helpCategory(CommandSender s) { s.sendMessage(plugin.prefixed("/shop admin category list | setmult <cat> <x> | toggle <cat> <on|off>")); }
+    private void help(CommandSender s) { s.sendMessage(plugin.prefixed("/shop admin category <list|setmult|toggle|setperm> ... | import | reload")); }
+    private void helpCategory(CommandSender s) { s.sendMessage(plugin.prefixed("/shop admin category list | setmult <cat> <x> | toggle <cat> <on|off> | setperm <cat> <perm|none>")); }
 }
