@@ -52,7 +52,8 @@ public final class SellMenu implements MenuView {
     }
 
     private void sellAll(Player p) {
-        double total = 0.0; int stacks = 0;
+        double subtotal = 0.0; double taxTotal = 0.0; double total = 0.0; int stacks = 0; int qtyTotal = 0;
+        double taxRate = plugin.getConfig().getDouble("taxRate", 0.0);
         for (int i = 0; i < p.getInventory().getSize(); i++) {
             ItemStack s = p.getInventory().getItem(i);
             if (s == null) continue; var m = s.getType();
@@ -60,13 +61,21 @@ public final class SellMenu implements MenuView {
             int qty = s.getAmount();
             double unit = plugin.shop().priceSell(m);
             double amount = unit * qty;
-            total += amount; stacks++;
+            double tax = amount * taxRate;
+            double payout = amount - tax;
+            subtotal += amount; taxTotal += tax; total += payout; stacks++; qtyTotal += qty;
             p.getInventory().setItem(i, null);
-            plugin.logger().logAsync(new com.yourorg.servershop.logging.Transaction(java.time.Instant.now(), p.getName(), com.yourorg.servershop.logging.Transaction.Type.SELL, m, qty, amount));
+            plugin.logger().logAsync(new com.yourorg.servershop.logging.Transaction(java.time.Instant.now(), p.getName(), com.yourorg.servershop.logging.Transaction.Type.SELL, m, qty, payout));
             // TODO: consider calling plugin.dynamic().adjustOnSell(m, qty) per TODO list
         }
         if (total > 0) plugin.economy().depositPlayer(p, total);
         p.sendMessage(plugin.prefixed(plugin.getConfig().getString("messages.soldall").replace("%count%", String.valueOf(stacks)).replace("%total%", String.format("%.2f", total))));
+        if (qtyTotal > 0) {
+            double avgUnit = subtotal / qtyTotal;
+            String breakdown = org.bukkit.ChatColor.translateAlternateColorCodes('&',
+                    "&6$"+String.format("%.2f", avgUnit)+" &7× &e"+qtyTotal+" &7→ &c$"+String.format("%.2f", taxTotal)+" &7→ &a$"+String.format("%.2f", total));
+            p.sendMessage(plugin.prefixed(breakdown));
+        }
         refresh(p);
     }
 
