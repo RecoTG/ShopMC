@@ -3,6 +3,9 @@ package com.yourorg.servershop.dynamic;
 import com.yourorg.servershop.ServerShopPlugin;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.configuration.file.YamlConfiguration;
+
+import java.io.File;
 
 public final class DynamicPricingManager {
     private final ServerShopPlugin plugin;
@@ -88,6 +91,47 @@ public final class DynamicPricingManager {
         st.multiplier = clampMult(st.multiplier - sellStep * qty);
         st.lastUpdateMs = System.currentTimeMillis();
         saveLater(m, st);
+    }
+
+    public synchronized double multiplier(Material m) { return currentMultiplier(m); }
+
+    public synchronized void reset(Material m) {
+        PriceState st = new PriceState(initMult, System.currentTimeMillis());
+        map.put(m, st);
+        saveLater(m, st);
+    }
+
+    public synchronized void resetAll() {
+        long now = System.currentTimeMillis();
+        map.replaceAll((k, v) -> new PriceState(initMult, now));
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            try { storage.saveAll(new java.util.EnumMap<>(map)); } catch (Exception e) { plugin.getLogger().warning("Failed to save prices: "+e.getMessage()); }
+        });
+    }
+
+    public synchronized void saveSnapshot(File file) throws java.io.IOException {
+        YamlConfiguration y = new YamlConfiguration();
+        for (var e : map.entrySet()) {
+            y.set(e.getKey().name()+".multiplier", e.getValue().multiplier);
+            y.set(e.getKey().name()+".lastUpdateMs", e.getValue().lastUpdateMs);
+        }
+        y.save(file);
+    }
+
+    public synchronized void loadSnapshot(File file) throws java.io.IOException {
+        map.clear();
+        YamlConfiguration y = YamlConfiguration.loadConfiguration(file);
+        long now = System.currentTimeMillis();
+        for (String k : y.getKeys(false)) {
+            Material m = Material.matchMaterial(k);
+            if (m == null) continue;
+            double mult = y.getDouble(k+".multiplier", initMult);
+            long last = y.getLong(k+".lastUpdateMs", now);
+            map.put(m, new PriceState(mult, last));
+        }
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            try { storage.saveAll(new java.util.EnumMap<>(map)); } catch (Exception e) { plugin.getLogger().warning("Failed to save prices: "+e.getMessage()); }
+        });
     }
 
     private void saveLater(Material m, PriceState st) {
