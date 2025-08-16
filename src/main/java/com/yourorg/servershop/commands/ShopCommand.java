@@ -54,6 +54,8 @@ public final class ShopCommand implements TabExecutor {
                 double price = plugin.shop().priceBuy(m);
                 sender.sendMessage(" - "+m.name()+": $"+String.format("%.2f", price));
             }
+            if (start > 0) sender.sendMessage(plugin.prefixed("Prev: /shop search "+q+" "+page0));
+            if (end < enabled.size()) sender.sendMessage(plugin.prefixed("Next: /shop search "+q+" "+(page0+2)));
         }
         return true;
     }
@@ -104,7 +106,14 @@ public final class ShopCommand implements TabExecutor {
             if (args.length == 2) { suggestMats(out, args[1]); return out; }
             if (args[0].equalsIgnoreCase("buy") && args.length == 3) { suggest(out, args[2], "1","16","64"); return out; }
         }
-        if (args[0].equalsIgnoreCase("search")) { return out; }
+        if (args[0].equalsIgnoreCase("search")) {
+            String q = String.join(" ", java.util.Arrays.copyOfRange(args, 1, args.length)).trim();
+            if (!q.isEmpty()) {
+                java.util.Set<Material> mats = new java.util.TreeSet<>(plugin.catalog().allMaterials());
+                for (Material m : Fuzzy.rankMaterials(mats, q, 50, 0.35)) out.add(m.name());
+            }
+            return out;
+        }
         return out;
     }
 
