@@ -51,15 +51,33 @@ public final class AdminCommand {
             return true;
         }
         if (sub.equals("setmult") && args.length >= 3) {
-            String cat = args[1];
+            String catArg = args[1];
+            String cat = plugin.categorySettings().categories().stream()
+                    .filter(c -> c.equalsIgnoreCase(catArg))
+                    .findFirst().orElse(null);
+            if (cat == null) {
+                sender.sendMessage(plugin.prefixed("Unknown category."));
+                return true;
+            }
             double m;
             try { m = Double.parseDouble(args[2]); } catch (Exception e) { sender.sendMessage(plugin.prefixed("Bad number.")); return true; }
+            if (Double.isNaN(m) || m < 0) {
+                sender.sendMessage(plugin.prefixed("Multiplier must be a non-negative number."));
+                return true;
+            }
             plugin.categorySettings().setMultiplier(cat, m);
             sender.sendMessage(plugin.prefixed("Set multiplier for "+cat+" to x"+m));
             return true;
         }
         if (sub.equals("toggle") && args.length >= 3) {
-            String cat = args[1];
+            String catArg = args[1];
+            String cat = plugin.categorySettings().categories().stream()
+                    .filter(c -> c.equalsIgnoreCase(catArg))
+                    .findFirst().orElse(null);
+            if (cat == null) {
+                sender.sendMessage(plugin.prefixed("Unknown category."));
+                return true;
+            }
             boolean on = args[2].equalsIgnoreCase("on") || args[2].equalsIgnoreCase("true");
             plugin.categorySettings().setEnabled(cat, on);
             sender.sendMessage(plugin.prefixed("Category "+cat+" is now "+(on?"enabled":"disabled")));
