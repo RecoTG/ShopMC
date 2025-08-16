@@ -11,6 +11,7 @@ public final class DynamicPricingManager {
     private final boolean enabled;
     private final double initMult, minMult, maxMult, buyStep, sellStep, perHourTowards1;
     private final boolean decayEnabled;
+    private final double buyMultiplier, sellMultiplier;
 
     public DynamicPricingManager(ServerShopPlugin plugin) {
         this.plugin = plugin;
@@ -25,6 +26,8 @@ public final class DynamicPricingManager {
         var dec = dp.getConfigurationSection("decay");
         this.decayEnabled = dec.getBoolean("enabled", true);
         this.perHourTowards1 = dec.getDouble("perHourTowards1", 0.02);
+        this.buyMultiplier = c.getDouble("buyMultiplier", 1.0);
+        this.sellMultiplier = c.getDouble("sellMultiplier", 0.8);
 
         String mode = dp.getString("storage", "YAML").toUpperCase();
         PriceStorage ps;
@@ -62,7 +65,7 @@ public final class DynamicPricingManager {
         double weeklyDiscount = plugin.weekly().isWeekly(m) ? plugin.getConfig().getDouble("weekly.discount", 0.80) : 1.0;
         String cat = plugin.catalog().categoryOf(m);
         double catMult = plugin.categorySettings().multiplier(cat);
-        double price = base * mult * weeklyDiscount * catMult;
+        double price = base * mult * weeklyDiscount * catMult * buyMultiplier;
         return clampToBounds(price, base);
     }
 
@@ -70,7 +73,7 @@ public final class DynamicPricingManager {
         double mult = currentMultiplier(m);
         String cat = plugin.catalog().categoryOf(m);
         double catMult = plugin.categorySettings().multiplier(cat);
-        double price = base * mult * catMult;
+        double price = base * mult * catMult * sellMultiplier;
         return clampToBounds(price, base);
     }
 
