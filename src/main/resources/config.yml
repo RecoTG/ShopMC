@@ -4,6 +4,8 @@ weekly:
   count: 6
   discount: 0.80
   firstDayOfWeek: MONDAY
+  cron: "0 0 * * MON" # Monday 00:00 UTC
+  pool: {}
 priceModel:
   minFactor: 0.5
   maxFactor: 1.5
