@@ -35,6 +35,8 @@ dynamicPricing:
     enabled: true
     perHourTowards1: 0.02
     saveEveryMinutes: 5
+decayToOne:
+  factor: 0.05
 gui:
   titles:
     categories: '&8Server Shop'
