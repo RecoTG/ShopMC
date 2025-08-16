@@ -9,7 +9,7 @@ public final class SellAllCommand implements CommandExecutor {
     public SellAllCommand(ServerShopPlugin plugin) { this.plugin = plugin; }
 
     @Override public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-        if (!(sender instanceof Player p)) { sender.sendMessage(plugin.prefixed(plugin.getConfig().getString("messages.not-a-player"))); return true; }
+        if (!(sender instanceof Player p)) { sender.sendMessage(plugin.prefixed(plugin.msg("not-a-player"))); return true; }
         plugin.menus().openSell(p);
         return true;
     }

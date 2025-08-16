@@ -19,9 +19,9 @@ public final class ShopLogCommand implements CommandExecutor {
         if (args.length >= 2) try { limit = Integer.parseInt(args[1]); } catch (Exception ignored) {}
         final int flimit = limit; final String fplayer = player;
         plugin.logger().lastAsync(fplayer, flimit, list -> {
-            sender.sendMessage(plugin.prefixed(plugin.getConfig().getString("messages.log-header").replace("%n%", String.valueOf(flimit))));
+            sender.sendMessage(plugin.prefixed(plugin.msg("log-header").replace("%n%", String.valueOf(flimit))));
             for (Transaction t : list) {
-                String line = plugin.getConfig().getString("messages.log-line");
+                String line = plugin.msg("log-line");
                 line = line.replace("%time%", fmt.format(t.time))
                         .replace("%player%", t.player)
                         .replace("%type%", t.type.name().toLowerCase())

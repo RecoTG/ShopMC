@@ -18,7 +18,7 @@ public final class ShopCommand implements TabExecutor {
 
     @Override public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
         if (args.length == 0) {
-            if (sender instanceof Player p) { plugin.menus().openCategories(p); } else sender.sendMessage(plugin.prefixed(plugin.getConfig().getString("messages.not-a-player")));
+            if (sender instanceof Player p) { plugin.menus().openCategories(p); } else sender.sendMessage(plugin.prefixed(plugin.msg("not-a-player")));
             return true;
         }
         if (args[0].equalsIgnoreCase("admin")) return admin.handle(sender, args);
@@ -60,7 +60,7 @@ public final class ShopCommand implements TabExecutor {
 
     private boolean price(CommandSender sender, String[] args) {
         if (args.length < 2) { sender.sendMessage(plugin.prefixed("/shop price <material>")); return true; }
-        Material mat = Util.parseMaterial(args[1]);
+        Material mat = Util.parseMaterial(plugin, args[1]);
         if (mat == null) { sender.sendMessage(plugin.prefixed(msg("unknown-material").replace("%material%", args[1]))); return true; }
         Optional<ItemEntry> opt = plugin.catalog().get(mat);
         if (opt.isEmpty() || !opt.get().canBuy()) { sender.sendMessage(plugin.prefixed(msg("not-for-sale").replace("%material%", mat.name()))); return true; }
@@ -73,14 +73,14 @@ public final class ShopCommand implements TabExecutor {
         if (!(sender instanceof Player p)) { sender.sendMessage(plugin.prefixed(msg("not-a-player"))); return true; }
         if (plugin.economy() == null) { sender.sendMessage(plugin.prefixed(msg("no-economy"))); return true; }
         if (args.length < 3) { p.sendMessage(plugin.prefixed("/shop buy <material> <qty>")); return true; }
-        Material mat = Util.parseMaterial(args[1]);
+        Material mat = Util.parseMaterial(plugin, args[1]);
         int qty; try { qty = Math.max(1, Integer.parseInt(args[2])); } catch (Exception ex) { qty = 1; }
         if (mat == null) { p.sendMessage(plugin.prefixed(msg("unknown-material").replace("%material%", args[1]))); return true; }
         plugin.shop().buy(p, mat, qty).ifPresent(err -> p.sendMessage(plugin.prefixed(err)));
         return true;
     }
 
-    private String msg(String key) { return plugin.getConfig().getString("messages." + key, key); }
+    private String msg(String key) { return plugin.msg(key); }
 
     @Override public java.util.List<String> onTabComplete(CommandSender sender, Command cmd, String alias, String[] args) {
         java.util.List<String> out = new java.util.ArrayList<>();
@@ -97,6 +97,9 @@ public final class ShopCommand implements TabExecutor {
                     if (args.length == 4) { suggestCats(out, args[3]); return out; }
                     if (args.length == 5) { suggest(out, args[4], "on","off"); return out; }
                 }
+            }
+            if (args[1].equalsIgnoreCase("reload")) {
+                if (args.length == 3) { suggest(out, args[2], "all","config","categories","messages"); return out; }
             }
             return out;
         }

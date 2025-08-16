@@ -66,7 +66,7 @@ public final class SellMenu implements MenuView {
             // TODO: consider calling plugin.dynamic().adjustOnSell(m, qty) per TODO list
         }
         if (total > 0) plugin.economy().depositPlayer(p, total);
-        p.sendMessage(plugin.prefixed(plugin.getConfig().getString("messages.soldall").replace("%count%", String.valueOf(stacks)).replace("%total%", String.format("%.2f", total))));
+        p.sendMessage(plugin.prefixed(plugin.msg("soldall").replace("%count%", String.valueOf(stacks)).replace("%total%", String.format("%.2f", total))));
         refresh(p);
     }
 
