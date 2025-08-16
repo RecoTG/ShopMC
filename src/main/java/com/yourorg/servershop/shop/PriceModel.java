@@ -19,4 +19,6 @@ public final class PriceModel {
     }
 
     public double afterSold(double current) { return current * (1.0 - sellStep); }
+    public double minFactor() { return minFactor; }
+    public double maxFactor() { return maxFactor; }
 }

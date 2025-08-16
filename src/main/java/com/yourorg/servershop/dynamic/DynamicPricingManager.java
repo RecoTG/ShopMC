@@ -63,7 +63,7 @@ public final class DynamicPricingManager {
         String cat = plugin.catalog().categoryOf(m);
         double catMult = plugin.categorySettings().multiplier(cat);
         double price = base * mult * weeklyDiscount * catMult;
-        return clampToBounds(price, base);
+        return clampToBounds(price, base, cat);
     }
 
     public synchronized double sellPrice(Material m, double base) {
@@ -71,7 +71,7 @@ public final class DynamicPricingManager {
         String cat = plugin.catalog().categoryOf(m);
         double catMult = plugin.categorySettings().multiplier(cat);
         double price = base * mult * catMult;
-        return clampToBounds(price, base);
+        return clampToBounds(price, base, cat);
     }
 
     public synchronized void adjustOnBuy(Material m, int qty) {
@@ -109,7 +109,18 @@ public final class DynamicPricingManager {
         try { storage.saveAll(map); storage.close(); } catch (Exception ignored) { }
     }
 
-    private double clampToBounds(double value, double base) { return plugin.catalog().priceModel().clampToBounds(value, base); }
+    private double clampToBounds(double value, double base, String category) {
+        var pm = plugin.catalog().priceModel();
+        double minF = pm.minFactor();
+        double maxF = pm.maxFactor();
+        Double catMin = plugin.categorySettings().minFactor(category);
+        Double catMax = plugin.categorySettings().maxFactor(category);
+        if (catMin != null) minF = catMin;
+        if (catMax != null) maxF = catMax;
+        double min = Math.max(0.01, base * minF);
+        double max = Math.max(min, base * maxF);
+        return Math.max(min, Math.min(max, value));
+    }
     private double clampMult(double mult) { return Math.max(minMult, Math.min(maxMult, mult)); }
 
     private double currentMultiplier(Material m) {
