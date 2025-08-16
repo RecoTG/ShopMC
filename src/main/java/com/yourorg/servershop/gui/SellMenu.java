@@ -1,6 +1,7 @@
 package com.yourorg.servershop.gui;
 
 import com.yourorg.servershop.ServerShopPlugin;
+import com.yourorg.servershop.util.CurrencyUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -8,6 +9,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
+import java.math.BigDecimal;
 import java.util.*;
 
 public final class SellMenu implements MenuView {
@@ -45,28 +47,29 @@ public final class SellMenu implements MenuView {
         for (var ent : map.entrySet()) {
             double unit = plugin.shop().priceSell(ent.getKey());
             inv.setItem(i, GuiUtil.item(ent.getKey().isItem()?ent.getKey():Material.PAPER, "&a"+ent.getKey().name(), GuiUtil.lore(
-                    "&7Unit: &6$"+String.format("%.2f", unit), "&7You have: &e"+ent.getValue(), "&8Click: sell stack  |  Shift: sell all of this")));
+                    "&7Unit: &6$"+CurrencyUtil.format(unit), "&7You have: &e"+ent.getValue(), "&8Click: sell stack  |  Shift: sell all of this")));
             i += (i % 9 == 7) ? 3 : 1;
         }
         inv.setItem(6*9-5, GuiUtil.item(Material.BARRIER, "&cSell All", GuiUtil.lore("&7Sells every sellable item")));
     }
 
     private void sellAll(Player p) {
-        double total = 0.0; int stacks = 0;
+        BigDecimal total = BigDecimal.ZERO; int stacks = 0;
         for (int i = 0; i < p.getInventory().getSize(); i++) {
             ItemStack s = p.getInventory().getItem(i);
             if (s == null) continue; var m = s.getType();
             var e = plugin.catalog().get(m).orElse(null); if (e == null || !e.canSell()) continue;
             int qty = s.getAmount();
-            double unit = plugin.shop().priceSell(m);
-            double amount = unit * qty;
-            total += amount; stacks++;
+            BigDecimal unit = CurrencyUtil.bd(plugin.shop().priceSell(m));
+            BigDecimal amount = CurrencyUtil.zeroIfNegative(CurrencyUtil.multiply(unit, qty));
+            total = total.add(amount);
+            stacks++;
             p.getInventory().setItem(i, null);
             plugin.logger().logAsync(new com.yourorg.servershop.logging.Transaction(java.time.Instant.now(), p.getName(), com.yourorg.servershop.logging.Transaction.Type.SELL, m, qty, amount));
             // TODO: consider calling plugin.dynamic().adjustOnSell(m, qty) per TODO list
         }
-        if (total > 0) plugin.economy().depositPlayer(p, total);
-        p.sendMessage(plugin.prefixed(plugin.getConfig().getString("messages.soldall").replace("%count%", String.valueOf(stacks)).replace("%total%", String.format("%.2f", total))));
+        if (total.signum() > 0) plugin.economy().depositPlayer(p, total.doubleValue());
+        p.sendMessage(plugin.prefixed(plugin.getConfig().getString("messages.soldall").replace("%count%", String.valueOf(stacks)).replace("%total%", CurrencyUtil.format(total))));
         refresh(p);
     }
 

@@ -2,6 +2,7 @@ package com.yourorg.servershop.commands;
 
 import com.yourorg.servershop.ServerShopPlugin;
 import com.yourorg.servershop.logging.Transaction;
+import com.yourorg.servershop.util.CurrencyUtil;
 import org.bukkit.command.*;
 
 import java.time.ZoneId;
@@ -27,7 +28,7 @@ public final class ShopLogCommand implements CommandExecutor {
                         .replace("%type%", t.type.name().toLowerCase())
                         .replace("%qty%", String.valueOf(t.quantity))
                         .replace("%material%", t.material.name())
-                        .replace("%amount%", String.format("%.2f", t.amount));
+                        .replace("%amount%", CurrencyUtil.format(t.amount));
                 sender.sendMessage(plugin.prefixed(line));
             }
         });
