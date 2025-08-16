@@ -22,6 +22,7 @@ public final class ServerShopPlugin extends JavaPlugin {
     private ShopService shopService;
     private DynamicPricingManager dynamic;
     private CategorySettings categorySettings;
+    private RankMultipliers rankMultipliers;
 
     @Override public void onEnable() {
         saveDefaultConfig();
@@ -33,6 +34,7 @@ public final class ServerShopPlugin extends JavaPlugin {
             return;
         }
         this.categorySettings = new CategorySettings(this);
+        this.rankMultipliers = new RankMultipliers(this);
         this.catalog = new Catalog(this); catalog.reload();
         this.weekly = new WeeklyShopManager(this);
         this.logger = new LoggerManager(this);
@@ -79,4 +81,5 @@ public final class ServerShopPlugin extends JavaPlugin {
     public ShopService shop() { return shopService; }
     public DynamicPricingManager dynamic() { return dynamic; }
     public CategorySettings categorySettings() { return categorySettings; }
+    public RankMultipliers rankMultipliers() { return rankMultipliers; }
 }

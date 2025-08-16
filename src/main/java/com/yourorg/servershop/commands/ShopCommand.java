@@ -51,7 +51,7 @@ public final class ShopCommand implements TabExecutor {
             for (int i=start;i<end;i++) {
                 Material m = enabled.get(i);
                 var e = plugin.catalog().get(m).orElse(null); if (e == null) continue;
-                double price = plugin.shop().priceBuy(m);
+                double price = sender instanceof Player p ? plugin.shop().priceBuy(p, m) : plugin.shop().priceBuy(m);
                 sender.sendMessage(" - "+m.name()+": $"+String.format("%.2f", price));
             }
         }
@@ -64,7 +64,7 @@ public final class ShopCommand implements TabExecutor {
         if (mat == null) { sender.sendMessage(plugin.prefixed(msg("unknown-material").replace("%material%", args[1]))); return true; }
         Optional<ItemEntry> opt = plugin.catalog().get(mat);
         if (opt.isEmpty() || !opt.get().canBuy()) { sender.sendMessage(plugin.prefixed(msg("not-for-sale").replace("%material%", mat.name()))); return true; }
-        double price = plugin.shop().priceBuy(mat);
+        double price = sender instanceof Player p ? plugin.shop().priceBuy(p, mat) : plugin.shop().priceBuy(mat);
         sender.sendMessage(plugin.prefixed(mat.name() + ": $" + String.format("%.2f", price)));
         return true;
     }

@@ -12,7 +12,7 @@ public final class CategoryMenu implements MenuView {
     private final ServerShopPlugin plugin;
     public CategoryMenu(ServerShopPlugin plugin) { this.plugin = plugin; }
 
-    @Override public Inventory build() {
+    @Override public Inventory build(Player viewer) {
         int rows = Math.max(1, plugin.getConfig().getInt("gui.rows.categories", 3));
         Inventory inv = Bukkit.createInventory(null, rows*9, title());
         int slot = 10;
