@@ -4,6 +4,7 @@ import com.yourorg.servershop.ServerShopPlugin;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.inventory.ItemStack;
 
 import java.io.File;
 import java.util.*;
@@ -13,12 +14,14 @@ public final class Catalog {
     private final Map<Material, ItemEntry> items = new EnumMap<>(Material.class);
     private final Map<String, List<Material>> categories = new LinkedHashMap<>();
     private final Map<Material, String> catByMat = new EnumMap<>(Material.class);
+    private final Map<Material, List<String>> searchNames = new EnumMap<>(Material.class);
+    private final Map<Material, String> displayNames = new EnumMap<>(Material.class);
     private PriceModel priceModel;
 
     public Catalog(ServerShopPlugin plugin) { this.plugin = plugin; }
 
     public void reload() {
-        items.clear(); categories.clear(); catByMat.clear();
+        items.clear(); categories.clear(); catByMat.clear(); searchNames.clear(); displayNames.clear();
         this.priceModel = new PriceModel(plugin.getConfig());
         File f = new File(plugin.getDataFolder(), "shop.yml");
         var yml = YamlConfiguration.loadConfiguration(f);
@@ -36,6 +39,19 @@ public final class Catalog {
                 items.put(m, new ItemEntry(m, buy, sell));
                 mats.add(m);
                 catByMat.put(m, cat);
+
+                List<String> names = new ArrayList<>();
+                names.add(m.name());
+                String display = isec.getString("name");
+                if (display == null || display.isEmpty()) {
+                    if (m.isItem()) {
+                        try { display = new ItemStack(m).getI18NDisplayName(); } catch (Exception ignored) {}
+                    }
+                }
+                if (display != null && !display.isEmpty()) names.add(display);
+                names.addAll(isec.getStringList("aliases"));
+                searchNames.put(m, Collections.unmodifiableList(names));
+                displayNames.put(m, display != null && !display.isEmpty() ? display : m.name());
             }
             categories.put(cat, Collections.unmodifiableList(mats));
             plugin.categorySettings().ensureCategory(cat);
@@ -48,4 +64,6 @@ public final class Catalog {
     public java.util.Map<String, java.util.List<Material>> categories() { return categories; }
     public PriceModel priceModel() { return priceModel; }
     public String categoryOf(Material m) { return catByMat.getOrDefault(m, ""); }
+    public java.util.List<String> searchNames(Material m) { return searchNames.getOrDefault(m, java.util.List.of(m.name())); }
+    public String displayName(Material m) { return displayNames.getOrDefault(m, m.name()); }
 }
