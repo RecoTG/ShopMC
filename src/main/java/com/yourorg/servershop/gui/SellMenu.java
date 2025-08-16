@@ -64,6 +64,8 @@ public final class SellMenu implements MenuView {
             p.getInventory().setItem(i, null);
             plugin.dynamic().adjustOnSell(m, qty);
             plugin.logger().logAsync(new com.yourorg.servershop.logging.Transaction(java.time.Instant.now(), p.getName(), com.yourorg.servershop.logging.Transaction.Type.SELL, m, qty, amount));
+            plugin.dynamic().adjustOnSell(m, qty);
+
         }
         if (total > 0) plugin.economy().depositPlayer(p, total);
         p.sendMessage(plugin.prefixed(plugin.getConfig().getString("messages.soldall").replace("%count%", String.valueOf(stacks)).replace("%total%", String.format("%.2f", total))));
