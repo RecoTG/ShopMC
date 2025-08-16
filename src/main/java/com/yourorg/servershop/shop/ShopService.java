@@ -78,5 +78,5 @@ public final class ShopService {
     }
 
     private static String fmt(double v) { return String.format("%.2f", v); }
-    private String msg(String key) { return plugin.getConfig().getString("messages." + key, key); }
+    private String msg(String key) { return plugin.msg(key); }
 }

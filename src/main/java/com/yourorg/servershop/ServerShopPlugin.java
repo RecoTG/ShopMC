@@ -22,10 +22,13 @@ public final class ServerShopPlugin extends JavaPlugin {
     private ShopService shopService;
     private DynamicPricingManager dynamic;
     private CategorySettings categorySettings;
+    private Aliases aliases;
+    private org.bukkit.configuration.file.FileConfiguration messages;
 
     @Override public void onEnable() {
         saveDefaultConfig();
         saveResource("messages.yml", false);
+        saveResource("aliases.yml", false);
         saveResource("shop.yml", false);
         if (!setupEconomy()) {
             getLogger().severe("Vault economy not found. Disabling.");
@@ -34,6 +37,8 @@ public final class ServerShopPlugin extends JavaPlugin {
         }
         this.categorySettings = new CategorySettings(this);
         this.catalog = new Catalog(this); catalog.reload();
+        reloadMessages();
+        this.aliases = new Aliases(this);
         this.weekly = new WeeklyShopManager(this);
         this.logger = new LoggerManager(this);
         this.dynamic = new DynamicPricingManager(this);
@@ -79,4 +84,9 @@ public final class ServerShopPlugin extends JavaPlugin {
     public ShopService shop() { return shopService; }
     public DynamicPricingManager dynamic() { return dynamic; }
     public CategorySettings categorySettings() { return categorySettings; }
+    public Aliases aliases() { return aliases; }
+    public org.bukkit.configuration.file.FileConfiguration messages() { return messages; }
+    public void reloadMessages() { this.messages = org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(new java.io.File(getDataFolder(), "messages.yml")); }
+    public void reloadAliases() { if (aliases != null) aliases.load(); else aliases = new Aliases(this); }
+    public String msg(String key) { return messages.getString(key, key); }
 }

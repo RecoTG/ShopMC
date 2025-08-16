@@ -17,7 +17,7 @@ public final class AdminCommand {
         switch (args[1].toLowerCase()) {
             case "category": return handleCategory(sender, slice(args, 2));
             case "import": return handleImport(sender);
-            case "reload": plugin.reloadConfig(); plugin.catalog().reload(); sender.sendMessage(plugin.prefixed("Reloaded.")); return true;
+            case "reload": return handleReload(sender, slice(args, 2));
             default: help(sender); return true;
         }
     }
@@ -69,6 +69,36 @@ public final class AdminCommand {
     }
 
     private static String[] slice(String[] a, int from) { String[] b = new String[Math.max(0, a.length-from)]; System.arraycopy(a, from, b, 0, b.length); return b; }
-    private void help(CommandSender s) { s.sendMessage(plugin.prefixed("/shop admin category <list|setmult|toggle> ... | import | reload")); }
+    private boolean handleReload(CommandSender sender, String[] args) {
+        String what = args.length < 1 ? "all" : args[0].toLowerCase();
+        switch (what) {
+            case "all":
+                plugin.reloadConfig();
+                plugin.catalog().reload();
+                plugin.categorySettings().load();
+                plugin.reloadMessages();
+                plugin.reloadAliases();
+                sender.sendMessage(plugin.prefixed("Reloaded all."));
+                return true;
+            case "config":
+                plugin.reloadConfig();
+                plugin.catalog().reload();
+                sender.sendMessage(plugin.prefixed("Reloaded config."));
+                return true;
+            case "categories":
+                plugin.categorySettings().load();
+                sender.sendMessage(plugin.prefixed("Reloaded categories."));
+                return true;
+            case "messages":
+                plugin.reloadMessages();
+                plugin.reloadAliases();
+                sender.sendMessage(plugin.prefixed("Reloaded messages and aliases."));
+                return true;
+            default:
+                sender.sendMessage(plugin.prefixed("Usage: /shop admin reload <all|config|categories|messages>"));
+                return true;
+        }
+    }
+    private void help(CommandSender s) { s.sendMessage(plugin.prefixed("/shop admin category <list|setmult|toggle> ... | import | reload <all|config|categories|messages>")); }
     private void helpCategory(CommandSender s) { s.sendMessage(plugin.prefixed("/shop admin category list | setmult <cat> <x> | toggle <cat> <on|off>")); }
 }
