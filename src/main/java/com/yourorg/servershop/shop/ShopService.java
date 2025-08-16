@@ -2,12 +2,14 @@ package com.yourorg.servershop.shop;
 
 import com.yourorg.servershop.ServerShopPlugin;
 import com.yourorg.servershop.logging.Transaction;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.time.Instant;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 
 public final class ShopService {
     private final ServerShopPlugin plugin;
@@ -15,6 +17,18 @@ public final class ShopService {
     public ShopService(ServerShopPlugin plugin) { this.plugin = plugin; }
 
     public Optional<String> buy(Player p, Material mat, int qty) {
+        if (!Bukkit.isPrimaryThread()) {
+            try {
+                return Bukkit.getScheduler().callSyncMethod(plugin, () -> buySync(p, mat, qty)).get();
+            } catch (InterruptedException | ExecutionException e) {
+                Thread.currentThread().interrupt();
+                return Optional.of("Internal error");
+            }
+        }
+        return buySync(p, mat, qty);
+    }
+
+    private Optional<String> buySync(Player p, Material mat, int qty) {
         var opt = plugin.catalog().get(mat);
         if (opt.isEmpty() || !opt.get().canBuy()) return Optional.of(msg("not-for-sale").replace("%material%", mat.name()));
         String cat = plugin.catalog().categoryOf(mat);
@@ -38,6 +52,18 @@ public final class ShopService {
     }
 
     public Optional<String> sell(Player p, Material mat, int qty) {
+        if (!Bukkit.isPrimaryThread()) {
+            try {
+                return Bukkit.getScheduler().callSyncMethod(plugin, () -> sellSync(p, mat, qty)).get();
+            } catch (InterruptedException | ExecutionException e) {
+                Thread.currentThread().interrupt();
+                return Optional.of("Internal error");
+            }
+        }
+        return sellSync(p, mat, qty);
+    }
+
+    private Optional<String> sellSync(Player p, Material mat, int qty) {
         var opt = plugin.catalog().get(mat);
         if (opt.isEmpty() || !opt.get().canSell()) return Optional.of(msg("not-sellable").replace("%material%", mat.name()));
         String cat = plugin.catalog().categoryOf(mat);
