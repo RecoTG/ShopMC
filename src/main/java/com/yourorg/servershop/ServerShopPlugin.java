@@ -7,6 +7,7 @@ import com.yourorg.servershop.shop.*;
 import com.yourorg.servershop.weekly.*;
 import com.yourorg.servershop.dynamic.*;
 import com.yourorg.servershop.config.*;
+import com.yourorg.servershop.metrics.MetricsManager;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -22,6 +23,7 @@ public final class ServerShopPlugin extends JavaPlugin {
     private ShopService shopService;
     private DynamicPricingManager dynamic;
     private CategorySettings categorySettings;
+    private MetricsManager metrics;
 
     @Override public void onEnable() {
         saveDefaultConfig();
@@ -40,6 +42,10 @@ public final class ServerShopPlugin extends JavaPlugin {
         this.shopService = new ShopService(this);
         this.menus = new MenuManager(this);
         Bukkit.getPluginManager().registerEvents(menus, this);
+
+        if (getConfig().getBoolean("metrics.enabled", true)) {
+            this.metrics = new MetricsManager(this);
+        }
 
         int saveEvery = Math.max(1, getConfig().getInt("dynamicPricing.decay.saveEveryMinutes", 5));
         Bukkit.getScheduler().runTaskTimerAsynchronously(this, dynamic::tickSaveAll, 20L * 60L * saveEvery, 20L * 60L * saveEvery);
@@ -79,4 +85,5 @@ public final class ServerShopPlugin extends JavaPlugin {
     public ShopService shop() { return shopService; }
     public DynamicPricingManager dynamic() { return dynamic; }
     public CategorySettings categorySettings() { return categorySettings; }
+    public MetricsManager metrics() { return metrics; }
 }
