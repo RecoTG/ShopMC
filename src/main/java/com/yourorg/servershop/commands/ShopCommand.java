@@ -88,7 +88,7 @@ public final class ShopCommand implements TabExecutor {
         if (args[0].equalsIgnoreCase("admin")) {
             if (args.length == 2) { suggest(out, args[1], "category","import","reload"); return out; }
             if (args[1].equalsIgnoreCase("category")) {
-                if (args.length == 3) { suggest(out, args[2], "list","setmult","toggle"); return out; }
+                if (args.length == 3) { suggest(out, args[2], "list","setmult","toggle","reload"); return out; }
                 if (args[2].equalsIgnoreCase("setmult")) {
                     if (args.length == 4) { suggestCats(out, args[3]); return out; }
                     if (args.length == 5) { suggest(out, args[4], "0.5","0.75","1","1.25","1.5"); return out; }
@@ -97,6 +97,7 @@ public final class ShopCommand implements TabExecutor {
                     if (args.length == 4) { suggestCats(out, args[3]); return out; }
                     if (args.length == 5) { suggest(out, args[4], "on","off"); return out; }
                 }
+                if (args[2].equalsIgnoreCase("reload")) { return out; }
             }
             return out;
         }
