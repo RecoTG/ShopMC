@@ -8,6 +8,8 @@ priceModel:
   minFactor: 0.5
   maxFactor: 1.5
   sellStep: 0.01
+buyMultiplier: 1.0     # Price multiplier when players buy from the shop
+sellMultiplier: 0.8    # Price multiplier when players sell to the shop
 logging:
   storage: YAML  # YAML or MYSQL
   maxEntries: 1000
