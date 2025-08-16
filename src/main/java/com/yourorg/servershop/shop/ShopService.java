@@ -20,7 +20,9 @@ public final class ShopService {
         String cat = plugin.catalog().categoryOf(mat);
         if (!plugin.categorySettings().isEnabled(cat)) return Optional.of("Category disabled: "+cat);
         double unit = plugin.dynamic().buyPrice(mat, opt.get().buyPrice());
-        double total = unit * qty;
+        double subtotal = unit * qty;
+        double tax = subtotal * plugin.taxRate();
+        double total = subtotal + tax;
         var econ = plugin.economy();
         if (econ.getBalance(p) + 1e-9 < total) {
             double need = Math.max(0, total - econ.getBalance(p));
@@ -33,7 +35,11 @@ public final class ShopService {
         if (!left.isEmpty()) { econ.depositPlayer(p, total); return Optional.of("Inventory full."); }
         plugin.dynamic().adjustOnBuy(mat, qty);
         plugin.logger().logAsync(new Transaction(Instant.now(), p.getName(), Transaction.Type.BUY, mat, qty, total));
-        p.sendMessage(plugin.prefixed(msg("purchased").replace("%qty%", String.valueOf(qty)).replace("%material%", mat.name()).replace("%price%", fmt(total))));
+        var priceComponent = plugin.mini().deserialize("<green>$" + fmt(total) + "</green>")
+                .hoverEvent(net.kyori.adventure.text.event.HoverEvent.showText(plugin.mini().deserialize(
+                        "<gray>$" + fmt(unit) + " × " + qty + " → tax $" + fmt(tax) + " → total $" + fmt(total) + "</gray>")));
+        var msg = plugin.mini().deserialize("Bought " + qty + "x " + mat.name() + " for ").append(priceComponent);
+        plugin.adventure().player(p).sendMessage(plugin.prefixed(msg));
         return Optional.empty();
     }
 
@@ -45,11 +51,17 @@ public final class ShopService {
         int removed = removeFromInventory(p, mat, qty);
         if (removed <= 0) return Optional.of("You don't have that.");
         double unit = plugin.dynamic().sellPrice(mat, opt.get().sellPrice());
-        double total = unit * removed;
+        double subtotal = unit * removed;
+        double tax = subtotal * plugin.taxRate();
+        double total = subtotal - tax;
         plugin.economy().depositPlayer(p, total);
         plugin.dynamic().adjustOnSell(mat, removed);
         plugin.logger().logAsync(new Transaction(Instant.now(), p.getName(), Transaction.Type.SELL, mat, removed, total));
-        p.sendMessage(plugin.prefixed(msg("sold").replace("%qty%", String.valueOf(removed)).replace("%material%", mat.name()).replace("%price%", fmt(total))));
+        var priceComponent = plugin.mini().deserialize("<green>$" + fmt(total) + "</green>")
+                .hoverEvent(net.kyori.adventure.text.event.HoverEvent.showText(plugin.mini().deserialize(
+                        "<gray>$" + fmt(unit) + " × " + removed + " → tax $" + fmt(tax) + " → total $" + fmt(total) + "</gray>")));
+        var msg = plugin.mini().deserialize("Sold " + removed + "x " + mat.name() + " for ").append(priceComponent);
+        plugin.adventure().player(p).sendMessage(plugin.prefixed(msg));
         return Optional.empty();
     }
 
