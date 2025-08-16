@@ -27,7 +27,7 @@ public final class ShopLogCommand implements CommandExecutor {
                         .replace("%type%", t.type.name().toLowerCase())
                         .replace("%qty%", String.valueOf(t.quantity))
                         .replace("%material%", t.material.name())
-                        .replace("%amount%", String.format("%.2f", t.amount));
+                        .replace("%amount%", String.format("%.2f", t.amount.doubleValue()));
                 sender.sendMessage(plugin.prefixed(line));
             }
         });

@@ -4,6 +4,7 @@ import com.yourorg.servershop.ServerShopPlugin;
 import org.bukkit.Bukkit;
 
 import java.util.List;
+import java.util.UUID;
 
 public final class LoggerManager {
     private final ServerShopPlugin plugin;
@@ -40,6 +41,19 @@ public final class LoggerManager {
             plugin.getLogger().info("Logging storage: YAML");
         }
         this.storage = s;
+
+        int retention = c.getInt("logging.retentionDays", 30);
+        if (retention > 0) {
+            long cutoffMs = retention * 24L * 60L * 60L * 1000L;
+            Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, () -> {
+                try {
+                    storage.purgeOlderThan(System.currentTimeMillis() - cutoffMs);
+                    storage.compact();
+                } catch (Exception e) {
+                    plugin.getLogger().warning("Log cleanup failed: " + e.getMessage());
+                }
+            }, 20L * 60L * 60L, 20L * 60L * 60L);
+        }
     }
 
     public void logAsync(Transaction tx) {
@@ -53,7 +67,13 @@ public final class LoggerManager {
     public void lastAsync(String playerOrNull, int limit, java.util.function.Consumer<List<Transaction>> cb) {
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             try {
-                List<Transaction> list = (playerOrNull == null) ? storage.last(limit) : storage.lastOf(playerOrNull, limit);
+                String uuid = null;
+                if (playerOrNull != null) {
+                    var off = Bukkit.getOfflinePlayer(playerOrNull);
+                    UUID id = off != null ? off.getUniqueId() : null;
+                    if (id != null) uuid = id.toString();
+                }
+                List<Transaction> list = (uuid == null) ? storage.last(limit) : storage.lastOf(uuid, limit);
                 Bukkit.getScheduler().runTask(plugin, () -> cb.accept(list));
             } catch (Exception e) {
                 plugin.getLogger().warning("Failed to read log: " + e.getMessage());
