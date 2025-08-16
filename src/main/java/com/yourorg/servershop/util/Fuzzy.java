@@ -44,12 +44,16 @@ public final class Fuzzy {
         return prev[m];
     }
 
-    public static java.util.List<Material> rankMaterials(java.util.Collection<Material> mats, String query, int limit, double threshold) {
+    public static java.util.List<Material> rankMaterials(java.util.Collection<Material> mats, String query, int limit, double threshold, com.yourorg.servershop.config.AliasManager aliases, String lang) {
         String q = normalize(query);
         java.util.List<MaterialScore> list = new java.util.ArrayList<>();
         for (Material m : mats) {
-            String name = m.name();
-            double s = similarity(q, name);
+            double s = similarity(q, m.name());
+            if (aliases != null && lang != null) {
+                for (String a : aliases.aliases(m, lang)) {
+                    s = Math.max(s, similarity(q, a));
+                }
+            }
             if (s >= threshold) list.add(new MaterialScore(m, s));
         }
         list.sort((a,b)->{
@@ -59,6 +63,10 @@ public final class Fuzzy {
         java.util.List<Material> out = new java.util.ArrayList<>();
         for (int i=0;i<list.size() && out.size()<limit;i++) out.add(list.get(i).m);
         return out;
+    }
+
+    public static java.util.List<Material> rankMaterials(java.util.Collection<Material> mats, String query, int limit, double threshold) {
+        return rankMaterials(mats, query, limit, threshold, null, null);
     }
 
     private static final class MaterialScore { final Material m; final double s; MaterialScore(Material m, double s){this.m=m;this.s=s;} }

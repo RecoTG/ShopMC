@@ -38,7 +38,7 @@ public final class ShopCommand implements TabExecutor {
         if (q.isEmpty()) { sender.sendMessage(plugin.prefixed("Please provide a search term.")); return true; }
 
         java.util.Set<Material> allowed = new java.util.TreeSet<>(plugin.catalog().allMaterials());
-        java.util.List<Material> mats = Fuzzy.rankMaterials(allowed, q, 500, 0.45);
+        java.util.List<Material> mats = Fuzzy.rankMaterials(allowed, q, 500, 0.45, plugin.aliases(), plugin.locale(sender));
         java.util.List<Material> enabled = mats.stream().filter(m -> plugin.categorySettings().isEnabled(plugin.catalog().categoryOf(m))).collect(java.util.stream.Collectors.toList());
         if (enabled.isEmpty()) { sender.sendMessage(plugin.prefixed("No matches.")); return true; }
 
@@ -60,7 +60,7 @@ public final class ShopCommand implements TabExecutor {
 
     private boolean price(CommandSender sender, String[] args) {
         if (args.length < 2) { sender.sendMessage(plugin.prefixed("/shop price <material>")); return true; }
-        Material mat = Util.parseMaterial(args[1]);
+        Material mat = Util.parseMaterial(plugin, sender, args[1]);
         if (mat == null) { sender.sendMessage(plugin.prefixed(msg("unknown-material").replace("%material%", args[1]))); return true; }
         Optional<ItemEntry> opt = plugin.catalog().get(mat);
         if (opt.isEmpty() || !opt.get().canBuy()) { sender.sendMessage(plugin.prefixed(msg("not-for-sale").replace("%material%", mat.name()))); return true; }
@@ -73,7 +73,7 @@ public final class ShopCommand implements TabExecutor {
         if (!(sender instanceof Player p)) { sender.sendMessage(plugin.prefixed(msg("not-a-player"))); return true; }
         if (plugin.economy() == null) { sender.sendMessage(plugin.prefixed(msg("no-economy"))); return true; }
         if (args.length < 3) { p.sendMessage(plugin.prefixed("/shop buy <material> <qty>")); return true; }
-        Material mat = Util.parseMaterial(args[1]);
+        Material mat = Util.parseMaterial(plugin, sender, args[1]);
         int qty; try { qty = Math.max(1, Integer.parseInt(args[2])); } catch (Exception ex) { qty = 1; }
         if (mat == null) { p.sendMessage(plugin.prefixed(msg("unknown-material").replace("%material%", args[1]))); return true; }
         plugin.shop().buy(p, mat, qty).ifPresent(err -> p.sendMessage(plugin.prefixed(err)));
@@ -101,7 +101,7 @@ public final class ShopCommand implements TabExecutor {
             return out;
         }
         if (args[0].equalsIgnoreCase("price") || args[0].equalsIgnoreCase("buy")) {
-            if (args.length == 2) { suggestMats(out, args[1]); return out; }
+              if (args.length == 2) { suggestMats(sender, out, args[1]); return out; }
             if (args[0].equalsIgnoreCase("buy") && args.length == 3) { suggest(out, args[2], "1","16","64"); return out; }
         }
         if (args[0].equalsIgnoreCase("search")) { return out; }
@@ -116,14 +116,19 @@ public final class ShopCommand implements TabExecutor {
         String t = token == null ? "" : token.toLowerCase(java.util.Locale.ROOT);
         for (String c : plugin.categorySettings().categories()) if (c.toLowerCase(java.util.Locale.ROOT).startsWith(t)) out.add(c);
     }
-    private void suggestMats(java.util.List<String> out, String token) {
-        String t = token == null ? "" : token.toUpperCase(java.util.Locale.ROOT).replace(' ', '_');
-        for (Material m : new java.util.TreeSet<>(plugin.catalog().allMaterials())) {
-            var e = plugin.catalog().get(m).orElse(null);
-            if (e == null || !e.canBuy()) continue;
-            String name = m.name();
-            if (name.startsWith(t)) out.add(name);
-            if (out.size() >= 50) break;
-        }
-    }
+      private void suggestMats(CommandSender sender, java.util.List<String> out, String token) {
+          String t = token == null ? "" : token.toUpperCase(java.util.Locale.ROOT).replace(' ', '_');
+          String lang = plugin.locale(sender);
+          for (Material m : new java.util.TreeSet<>(plugin.catalog().allMaterials())) {
+              var e = plugin.catalog().get(m).orElse(null);
+              if (e == null || !e.canBuy()) continue;
+              String name = m.name();
+              if (name.startsWith(t)) out.add(name);
+              for (String a : plugin.aliases().aliases(m, lang)) {
+                  String A = a.toUpperCase(java.util.Locale.ROOT);
+                  if (A.startsWith(t)) out.add(a);
+              }
+              if (out.size() >= 50) break;
+          }
+      }
 }
