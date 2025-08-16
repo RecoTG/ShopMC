@@ -25,6 +25,7 @@ public final class CategoryMenu implements MenuView {
         }
         inv.setItem(rows*9-5, GuiUtil.item(Material.CLOCK, "&bWeekly Picks", GuiUtil.lore("&7Weekly discounts")));
         inv.setItem(rows*9-4, GuiUtil.item(Material.GOLD_INGOT, "&aSell Items", GuiUtil.lore("&7Sell your loot")));
+        inv.setItem(rows*9-3, GuiUtil.item(Material.COMPASS, "&dSearch", GuiUtil.lore("&7Find items")));
         return inv;
     }
 
@@ -34,6 +35,7 @@ public final class CategoryMenu implements MenuView {
         var name = it.getItemMeta() != null ? it.getItemMeta().getDisplayName() : "";
         if (name.contains("Weekly")) { plugin.menus().openWeekly(p); return; }
         if (name.contains("Sell")) { plugin.menus().openSell(p); return; }
+        if (name.contains("Search")) { p.closeInventory(); p.sendMessage(plugin.prefixed("Use /shop search <name>")); return; }
         String clean = org.bukkit.ChatColor.stripColor(name);
         if (!plugin.categorySettings().isEnabled(clean)) { p.sendMessage(plugin.prefixed("Category disabled.")); return; }
         plugin.menus().openItems(p, clean);

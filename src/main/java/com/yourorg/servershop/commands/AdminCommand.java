@@ -17,7 +17,12 @@ public final class AdminCommand {
         switch (args[1].toLowerCase()) {
             case "category": return handleCategory(sender, slice(args, 2));
             case "import": return handleImport(sender);
-            case "reload": plugin.reloadConfig(); plugin.catalog().reload(); sender.sendMessage(plugin.prefixed("Reloaded.")); return true;
+            case "reload":
+                plugin.reloadConfig();
+                plugin.categorySettings().load();
+                plugin.catalog().reload();
+                sender.sendMessage(plugin.prefixed("Reloaded."));
+                return true;
             default: help(sender); return true;
         }
     }
@@ -65,10 +70,15 @@ public final class AdminCommand {
             sender.sendMessage(plugin.prefixed("Category "+cat+" is now "+(on?"enabled":"disabled")));
             return true;
         }
+        if (sub.equals("reload")) {
+            plugin.categorySettings().load();
+            sender.sendMessage(plugin.prefixed("Categories reloaded."));
+            return true;
+        }
         helpCategory(sender); return true;
     }
 
     private static String[] slice(String[] a, int from) { String[] b = new String[Math.max(0, a.length-from)]; System.arraycopy(a, from, b, 0, b.length); return b; }
-    private void help(CommandSender s) { s.sendMessage(plugin.prefixed("/shop admin category <list|setmult|toggle> ... | import | reload")); }
-    private void helpCategory(CommandSender s) { s.sendMessage(plugin.prefixed("/shop admin category list | setmult <cat> <x> | toggle <cat> <on|off>")); }
+    private void help(CommandSender s) { s.sendMessage(plugin.prefixed("/shop admin category <list|setmult|toggle|reload> ... | import | reload")); }
+    private void helpCategory(CommandSender s) { s.sendMessage(plugin.prefixed("/shop admin category list | setmult <cat> <x> | toggle <cat> <on|off> | reload")); }
 }
