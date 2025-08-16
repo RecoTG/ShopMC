@@ -11,8 +11,13 @@ public final class Transaction {
     public final Material material;
     public final int quantity;
     public final double amount;
+    public final String category;
+
+    public Transaction(Instant time, String player, Type type, Material material, int quantity, double amount, String category) {
+        this.time = time; this.player = player; this.type = type; this.material = material; this.quantity = quantity; this.amount = amount; this.category = category;
+    }
 
     public Transaction(Instant time, String player, Type type, Material material, int quantity, double amount) {
-        this.time = time; this.player = player; this.type = type; this.material = material; this.quantity = quantity; this.amount = amount;
+        this(time, player, type, material, quantity, amount, "");
     }
 }

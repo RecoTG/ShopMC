@@ -32,7 +32,7 @@ public final class ShopService {
         var left = p.getInventory().addItem(stack);
         if (!left.isEmpty()) { econ.depositPlayer(p, total); return Optional.of("Inventory full."); }
         plugin.dynamic().adjustOnBuy(mat, qty);
-        plugin.logger().logAsync(new Transaction(Instant.now(), p.getName(), Transaction.Type.BUY, mat, qty, total));
+        plugin.logger().logAsync(new Transaction(Instant.now(), p.getName(), Transaction.Type.BUY, mat, qty, total, cat));
         p.sendMessage(plugin.prefixed(msg("purchased").replace("%qty%", String.valueOf(qty)).replace("%material%", mat.name()).replace("%price%", fmt(total))));
         return Optional.empty();
     }
@@ -48,7 +48,7 @@ public final class ShopService {
         double total = unit * removed;
         plugin.economy().depositPlayer(p, total);
         plugin.dynamic().adjustOnSell(mat, removed);
-        plugin.logger().logAsync(new Transaction(Instant.now(), p.getName(), Transaction.Type.SELL, mat, removed, total));
+        plugin.logger().logAsync(new Transaction(Instant.now(), p.getName(), Transaction.Type.SELL, mat, removed, total, cat));
         p.sendMessage(plugin.prefixed(msg("sold").replace("%qty%", String.valueOf(removed)).replace("%material%", mat.name()).replace("%price%", fmt(total))));
         return Optional.empty();
     }
