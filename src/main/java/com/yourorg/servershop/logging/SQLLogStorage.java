@@ -33,6 +33,8 @@ public final class SQLLogStorage implements LogStorage {
                     "amount DOUBLE NOT NULL," +
                     "INDEX idx_player_time (player, time_ms)" +
                     ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+            // Ensure efficient global queries by indexing by time as well
+            st.executeUpdate("CREATE INDEX IF NOT EXISTS idx_time_ms ON servershop_transactions(time_ms)");
         }
     }
 
