@@ -15,9 +15,12 @@ public final class WeeklyMenu implements MenuView {
         Inventory inv = Bukkit.createInventory(null, 6*9, title());
         int i = 10;
         for (var m : plugin.weekly().currentPicks()) {
-            double price = plugin.shop().priceBuy(m);
-            inv.setItem(i, GuiUtil.item(m.isItem()?m:Material.BOOK, "&b"+m.name(), GuiUtil.lore(
-                    "&7Weekly price: &a$"+String.format("%.2f", price),
+            double regular = plugin.dynamic().buyPrice(m, plugin.catalog().get(m).map(e -> e.buyPrice()).orElse(0.0));
+            double discount = plugin.getConfig().getDouble("weekly.discount", 1.0);
+            double price = regular * discount;
+            inv.setItem(i, GuiUtil.item(m.isItem() ? m : Material.BOOK, "&b" + m.name(), GuiUtil.lore(
+                    "&7Weekly price: &a$" + String.format("%.2f", price),
+                    "&7Original: &c$" + String.format("%.2f", regular),
                     "&8Left-click: buy 1  |  Shift-left: buy 16")));
             i += (i % 9 == 7) ? 3 : 1;
         }
