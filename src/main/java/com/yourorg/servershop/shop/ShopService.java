@@ -7,12 +7,22 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.time.Instant;
-import java.util.Optional;
+import java.time.LocalDate;
+import java.util.*;
 
 public final class ShopService {
     private final ServerShopPlugin plugin;
+    private final int capPerTxn;
+    private final int capPerDay;
+    private final java.util.Map<java.util.UUID, Integer> dailySold = new java.util.HashMap<>();
+    private long currentDay = today();
 
-    public ShopService(ServerShopPlugin plugin) { this.plugin = plugin; }
+    public ShopService(ServerShopPlugin plugin) {
+        this.plugin = plugin;
+        var caps = plugin.getConfig().getConfigurationSection("sellCaps");
+        this.capPerTxn = caps == null ? Integer.MAX_VALUE : caps.getInt("perTransaction", Integer.MAX_VALUE);
+        this.capPerDay = caps == null ? Integer.MAX_VALUE : caps.getInt("perDay", Integer.MAX_VALUE);
+    }
 
     public Optional<String> buy(Player p, Material mat, int qty) {
         var opt = plugin.catalog().get(mat);
@@ -41,17 +51,29 @@ public final class ShopService {
     }
 
     public Optional<String> sell(Player p, Material mat, int qty) {
+        resetIfNewDay();
         var opt = plugin.catalog().get(mat);
         if (opt.isEmpty() || !opt.get().canSell()) return Optional.of(msg("not-sellable").replace("%material%", mat.name()));
         String cat = plugin.catalog().categoryOf(mat);
         if (!plugin.categorySettings().isEnabled(cat)) return Optional.of("Category disabled: "+cat);
-        int removed = removeFromInventory(p, mat, qty);
+
+        int allowed = qty;
+        if (capPerTxn > 0) allowed = Math.min(allowed, capPerTxn);
+        int sold = dailySold.getOrDefault(p.getUniqueId(), 0);
+        if (capPerDay > 0) {
+            int remaining = capPerDay - sold;
+            if (remaining <= 0) return Optional.of("Daily sell limit reached.");
+            allowed = Math.min(allowed, remaining);
+        }
+
+        int removed = removeFromInventory(p, mat, allowed);
         if (removed <= 0) return Optional.of("You don't have that.");
         double unit = plugin.dynamic().sellPrice(mat, opt.get().sellPrice());
         double total = unit * removed;
         plugin.economy().depositPlayer(p, total);
         plugin.dynamic().adjustOnSell(mat, removed);
         plugin.logger().logAsync(new Transaction(Instant.now(), p.getName(), Transaction.Type.SELL, mat, removed, total));
+        dailySold.put(p.getUniqueId(), sold + removed);
         p.sendMessage(plugin.prefixed(msg("sold").replace("%qty%", String.valueOf(removed)).replace("%material%", mat.name()).replace("%price%", fmt(total))));
         return Optional.empty();
     }
@@ -86,4 +108,14 @@ public final class ShopService {
 
     private static String fmt(double v) { return String.format("%.2f", v); }
     private String msg(String key) { return plugin.getConfig().getString("messages." + key, key); }
+
+    private static long today() { return LocalDate.now().toEpochDay(); }
+
+    private void resetIfNewDay() {
+        long t = today();
+        if (t != currentDay) {
+            currentDay = t;
+            dailySold.clear();
+        }
+    }
 }

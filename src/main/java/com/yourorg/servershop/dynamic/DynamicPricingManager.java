@@ -8,9 +8,11 @@ public final class DynamicPricingManager {
     private final ServerShopPlugin plugin;
     private final PriceStorage storage;
     private final java.util.Map<Material, PriceState> map = new java.util.EnumMap<>(Material.class);
+    private final java.util.Map<Material, Long> lastAdjust = new java.util.EnumMap<>(Material.class);
     private final boolean enabled;
     private final double initMult, minMult, maxMult, buyStep, sellStep, perHourTowards1;
     private final boolean decayEnabled;
+    private final long adjustCooldownMs;
 
     public DynamicPricingManager(ServerShopPlugin plugin) {
         this.plugin = plugin;
@@ -22,6 +24,7 @@ public final class DynamicPricingManager {
         this.maxMult = dp.getDouble("maxMultiplier", 2.0);
         this.buyStep = dp.getDouble("buyStep", 0.005);
         this.sellStep = dp.getDouble("sellStep", 0.005);
+        this.adjustCooldownMs = dp.getLong("adjustCooldownMs", 3000L);
         var dec = dp.getConfigurationSection("decay");
         this.decayEnabled = dec.getBoolean("enabled", true);
         this.perHourTowards1 = dec.getDouble("perHourTowards1", 0.02);
@@ -77,17 +80,34 @@ public final class DynamicPricingManager {
     public synchronized void adjustOnBuy(Material m, int qty) {
         if (!enabled) return;
         PriceState st = map.computeIfAbsent(m, k -> new PriceState(initMult, System.currentTimeMillis()));
-        st.multiplier = clampMult(st.multiplier + buyStep * qty);
-        st.lastUpdateMs = System.currentTimeMillis();
-        saveLater(m, st);
+        if (canAdjust(m)) {
+            st.multiplier = clampMult(st.multiplier + buyStep * qty);
+            st.lastUpdateMs = System.currentTimeMillis();
+            saveLater(m, st);
+        } else {
+            st.lastUpdateMs = System.currentTimeMillis();
+        }
     }
 
     public synchronized void adjustOnSell(Material m, int qty) {
         if (!enabled) return;
         PriceState st = map.computeIfAbsent(m, k -> new PriceState(initMult, System.currentTimeMillis()));
-        st.multiplier = clampMult(st.multiplier - sellStep * qty);
-        st.lastUpdateMs = System.currentTimeMillis();
-        saveLater(m, st);
+        if (canAdjust(m)) {
+            st.multiplier = clampMult(st.multiplier - sellStep * qty);
+            st.lastUpdateMs = System.currentTimeMillis();
+            saveLater(m, st);
+        } else {
+            st.lastUpdateMs = System.currentTimeMillis();
+        }
+    }
+
+    private boolean canAdjust(Material m) {
+        if (adjustCooldownMs <= 0) return true;
+        long now = System.currentTimeMillis();
+        long last = lastAdjust.getOrDefault(m, 0L);
+        if (now - last < adjustCooldownMs) return false;
+        lastAdjust.put(m, now);
+        return true;
     }
 
     private void saveLater(Material m, PriceState st) {

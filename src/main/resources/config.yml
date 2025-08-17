@@ -33,10 +33,14 @@ dynamicPricing:
   maxMultiplier: 2.0
   buyStep: 0.005
   sellStep: 0.005
+  adjustCooldownMs: 3000
   decay:
     enabled: true
     perHourTowards1: 0.02
     saveEveryMinutes: 5
+sellCaps:
+  perTransaction: 64
+  perDay: 640
 gui:
   titles:
     categories: '&8Server Shop'
