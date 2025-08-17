@@ -2,6 +2,7 @@ package com.yourorg.servershop.shop;
 
 import com.yourorg.servershop.ServerShopPlugin;
 import com.yourorg.servershop.logging.Transaction;
+import com.yourorg.servershop.util.ItemUtil;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -46,7 +47,7 @@ public final class ShopService {
         if (opt.isEmpty() || !opt.get().canSell()) return Optional.of(msg("not-sellable").replace("%material%", mat.name()));
         String cat = plugin.catalog().categoryOf(mat);
         if (!plugin.categorySettings().isEnabled(cat)) return Optional.of("Category disabled: "+cat);
-        int removed = removeFromInventory(p, mat, qty);
+        int removed = removeFromInventory(p, mat, qty, opt.get().allowMeta());
         if (removed <= 0) return Optional.of("You don't have that.");
         double unit = plugin.dynamic().sellPrice(mat, opt.get().sellPrice());
         double total = unit * removed;
@@ -72,11 +73,12 @@ public final class ShopService {
         return plugin.dynamic().sellPrice(mat, e.sellPrice());
     }
 
-    private int removeFromInventory(Player p, Material mat, int qty) {
+    private int removeFromInventory(Player p, Material mat, int qty, boolean allowMeta) {
         int remaining = qty;
         for (int i = 0; i < p.getInventory().getSize(); i++) {
             var stack = p.getInventory().getItem(i);
             if (stack == null || stack.getType() != mat) continue;
+            if (!allowMeta && ItemUtil.hasCustomMeta(stack)) continue;
             int take = Math.min(stack.getAmount(), remaining);
             stack.setAmount(stack.getAmount() - take);
             if (stack.getAmount() <= 0) p.getInventory().setItem(i, null);

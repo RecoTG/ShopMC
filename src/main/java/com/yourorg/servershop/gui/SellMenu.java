@@ -1,6 +1,7 @@
 package com.yourorg.servershop.gui;
 
 import com.yourorg.servershop.ServerShopPlugin;
+import com.yourorg.servershop.util.ItemUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -39,6 +40,7 @@ public final class SellMenu implements MenuView {
         for (ItemStack s : p.getInventory().getContents()) {
             if (s == null) continue; var m = s.getType();
             var e = plugin.catalog().get(m).orElse(null); if (e == null || !e.canSell()) continue;
+            if (!e.allowMeta() && ItemUtil.hasCustomMeta(s)) continue;
             map.put(m, map.getOrDefault(m, 0) + s.getAmount());
         }
         int i = 10;
@@ -57,6 +59,7 @@ public final class SellMenu implements MenuView {
             ItemStack s = p.getInventory().getItem(i);
             if (s == null) continue; var m = s.getType();
             var e = plugin.catalog().get(m).orElse(null); if (e == null || !e.canSell()) continue;
+            if (!e.allowMeta() && ItemUtil.hasCustomMeta(s)) continue;
             int qty = s.getAmount();
             double unit = plugin.shop().priceSell(m);
             double amount = unit * qty;
@@ -72,5 +75,13 @@ public final class SellMenu implements MenuView {
         refresh(p);
     }
 
-    private static int countOf(Player p, Material m){ int c=0; for (ItemStack s: p.getInventory().getContents()) if (s!=null && s.getType()==m) c+=s.getAmount(); return c; }
+    private int countOf(Player p, Material m){
+        int c = 0;
+        var e = plugin.catalog().get(m).orElse(null);
+        boolean allow = e != null && e.allowMeta();
+        for (ItemStack s: p.getInventory().getContents()) {
+            if (s != null && s.getType() == m && (allow || !ItemUtil.hasCustomMeta(s))) c += s.getAmount();
+        }
+        return c;
+    }
 }
