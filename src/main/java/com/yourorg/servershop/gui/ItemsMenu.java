@@ -48,5 +48,10 @@ public final class ItemsMenu implements MenuView {
         plugin.shop().buy(p, m, qty).ifPresent(err -> p.sendMessage(plugin.prefixed(err)));
     }
 
-    @Override public String title() { return plugin.getConfig().getString("gui.titles.items", "%category%").replace("%category%", category); }
+    @Override
+    public String title() {
+        return plugin.getConfig()
+                .getString("gui.titles.items", "%category%")
+                .replace("%category%", category);
+    }
 }

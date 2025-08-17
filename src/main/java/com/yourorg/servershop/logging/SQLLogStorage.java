@@ -37,6 +37,8 @@ public final class SQLLogStorage implements LogStorage {
                     "INDEX idx_uuid (uuid)," +
                     "INDEX idx_item (item)" +
                     ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+            // Ensure efficient global queries by indexing by time as well
+            st.executeUpdate("CREATE INDEX IF NOT EXISTS idx_time_ms ON servershop_transactions(time_ms)");
         }
     }
 

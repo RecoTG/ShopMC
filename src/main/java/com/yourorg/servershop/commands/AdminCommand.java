@@ -21,6 +21,7 @@ public final class AdminCommand {
             case "reload":
                 plugin.reloadConfig();
                 ConfigMigrator.migrate(plugin);
+                plugin.categorySettings().load();
                 plugin.catalog().reload();
                 sender.sendMessage(plugin.prefixed("Reloaded."));
                 return true;
@@ -46,14 +47,15 @@ public final class AdminCommand {
         if (args.length == 0) { helpCategory(sender); return true; }
         String sub = args[0].toLowerCase();
         if (sub.equals("list")) {
-            StringBuilder sb = new StringBuilder("Categories: ");
+            StringBuilder sb = new StringBuilder("&eCategories: &r");
             for (String c : plugin.categorySettings().categories()) {
                 boolean en = plugin.categorySettings().isEnabled(c);
                 double m = plugin.categorySettings().multiplier(c);
-                sb.append(ChatColor.YELLOW).append(c).append(ChatColor.GRAY).append("[")
-                        .append(en?"on":"off").append(", x").append(m).append("] ");
+                sb.append("&e").append(c).append("&7[")
+                  .append(en ? "on" : "off")
+                  .append(", x").append(m).append("] ");
             }
-            sender.sendMessage(sb.toString());
+            sender.sendMessage(ChatColor.translateAlternateColorCodes('&', sb.toString()));
             return true;
         }
         if (sub.equals("setmult") && args.length >= 3) {
@@ -71,10 +73,15 @@ public final class AdminCommand {
             sender.sendMessage(plugin.prefixed("Category "+cat+" is now "+(on?"enabled":"disabled")));
             return true;
         }
+        if (sub.equals("reload")) {
+            plugin.categorySettings().load();
+            sender.sendMessage(plugin.prefixed("Categories reloaded."));
+            return true;
+        }
         helpCategory(sender); return true;
     }
 
     private static String[] slice(String[] a, int from) { String[] b = new String[Math.max(0, a.length-from)]; System.arraycopy(a, from, b, 0, b.length); return b; }
-    private void help(CommandSender s) { s.sendMessage(plugin.prefixed("/shop admin category <list|setmult|toggle> ... | import | reload")); }
-    private void helpCategory(CommandSender s) { s.sendMessage(plugin.prefixed("/shop admin category list | setmult <cat> <x> | toggle <cat> <on|off>")); }
+    private void help(CommandSender s) { s.sendMessage(plugin.prefixed("/shop admin category <list|setmult|toggle|reload> ... | import | reload")); }
+    private void helpCategory(CommandSender s) { s.sendMessage(plugin.prefixed("/shop admin category list | setmult <cat> <x> | toggle <cat> <on|off> | reload")); }
 }

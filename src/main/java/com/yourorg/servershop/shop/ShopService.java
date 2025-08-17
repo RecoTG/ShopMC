@@ -20,6 +20,9 @@ public final class ShopService {
         String cat = plugin.catalog().categoryOf(mat);
         if (!plugin.categorySettings().isEnabled(cat)) return Optional.of("Category disabled: "+cat);
         double unit = plugin.dynamic().buyPrice(mat, opt.get().buyPrice());
+        if (plugin.weekly().isWeekly(mat)) {
+            unit *= plugin.getConfig().getDouble("weekly.discount", 1.0);
+        }
         double total = unit * qty;
         var econ = plugin.economy();
         if (econ.getBalance(p) + 1e-9 < total) {
@@ -57,7 +60,11 @@ public final class ShopService {
 
     public double priceBuy(Material mat) {
         var e = plugin.catalog().get(mat).orElse(null); if (e == null || !e.canBuy()) return -1;
-        return plugin.dynamic().buyPrice(mat, e.buyPrice());
+        double price = plugin.dynamic().buyPrice(mat, e.buyPrice());
+        if (plugin.weekly().isWeekly(mat)) {
+            price *= plugin.getConfig().getDouble("weekly.discount", 1.0);
+        }
+        return price;
     }
 
     public double priceSell(Material mat) {

@@ -54,6 +54,8 @@ public final class ShopCommand implements TabExecutor {
                 double price = plugin.shop().priceBuy(m);
                 sender.sendMessage(" - "+m.name()+": $"+String.format("%.2f", price));
             }
+            if (start > 0) sender.sendMessage(plugin.prefixed("Prev: /shop search "+q+" "+page0));
+            if (end < enabled.size()) sender.sendMessage(plugin.prefixed("Next: /shop search "+q+" "+(page0+2)));
         }
         return true;
     }
@@ -88,7 +90,7 @@ public final class ShopCommand implements TabExecutor {
         if (args[0].equalsIgnoreCase("admin")) {
             if (args.length == 2) { suggest(out, args[1], "category","import","reload"); return out; }
             if (args[1].equalsIgnoreCase("category")) {
-                if (args.length == 3) { suggest(out, args[2], "list","setmult","toggle"); return out; }
+                if (args.length == 3) { suggest(out, args[2], "list","setmult","toggle","reload"); return out; }
                 if (args[2].equalsIgnoreCase("setmult")) {
                     if (args.length == 4) { suggestCats(out, args[3]); return out; }
                     if (args.length == 5) { suggest(out, args[4], "0.5","0.75","1","1.25","1.5"); return out; }
@@ -97,6 +99,7 @@ public final class ShopCommand implements TabExecutor {
                     if (args.length == 4) { suggestCats(out, args[3]); return out; }
                     if (args.length == 5) { suggest(out, args[4], "on","off"); return out; }
                 }
+                if (args[2].equalsIgnoreCase("reload")) { return out; }
             }
             return out;
         }
@@ -104,7 +107,14 @@ public final class ShopCommand implements TabExecutor {
             if (args.length == 2) { suggestMats(out, args[1]); return out; }
             if (args[0].equalsIgnoreCase("buy") && args.length == 3) { suggest(out, args[2], "1","16","64"); return out; }
         }
-        if (args[0].equalsIgnoreCase("search")) { return out; }
+        if (args[0].equalsIgnoreCase("search")) {
+            String q = String.join(" ", java.util.Arrays.copyOfRange(args, 1, args.length)).trim();
+            if (!q.isEmpty()) {
+                java.util.Set<Material> mats = new java.util.TreeSet<>(plugin.catalog().allMaterials());
+                for (Material m : Fuzzy.rankMaterials(mats, q, 50, 0.35)) out.add(m.name());
+            }
+            return out;
+        }
         return out;
     }
 

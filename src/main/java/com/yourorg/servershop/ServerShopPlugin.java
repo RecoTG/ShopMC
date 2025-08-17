@@ -1,13 +1,15 @@
 package com.yourorg.servershop;
 
 import com.yourorg.servershop.commands.*;
+import com.yourorg.servershop.config.*;
+import com.yourorg.servershop.dynamic.*;
 import com.yourorg.servershop.gui.MenuManager;
 import com.yourorg.servershop.logging.*;
+import com.yourorg.servershop.placeholder.ShopExpansion;
 import com.yourorg.servershop.shop.*;
 import com.yourorg.servershop.weekly.*;
-import com.yourorg.servershop.dynamic.*;
-import com.yourorg.servershop.config.*;
 import net.milkbowl.vault.economy.Economy;
+import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.plugin.RegisteredServiceProvider;
@@ -23,7 +25,8 @@ public final class ServerShopPlugin extends JavaPlugin {
     private DynamicPricingManager dynamic;
     private CategorySettings categorySettings;
 
-    @Override public void onEnable() {
+    @Override
+    public void onEnable() {
         saveDefaultConfig();
         ConfigMigrator.migrate(this);
         saveResource("messages.yml", false);
@@ -34,7 +37,8 @@ public final class ServerShopPlugin extends JavaPlugin {
             return;
         }
         this.categorySettings = new CategorySettings(this);
-        this.catalog = new Catalog(this); catalog.reload();
+        this.catalog = new Catalog(this);
+        catalog.reload();
         this.weekly = new WeeklyShopManager(this);
         this.logger = new LoggerManager(this);
         this.dynamic = new DynamicPricingManager(this);
@@ -42,25 +46,36 @@ public final class ServerShopPlugin extends JavaPlugin {
         this.menus = new MenuManager(this);
         Bukkit.getPluginManager().registerEvents(menus, this);
 
-        int saveEvery = Math.max(1, getConfig().getInt("dynamicPricing.decay.saveEveryMinutes", 5));
-        Bukkit.getScheduler().runTaskTimerAsynchronously(this, dynamic::tickSaveAll, 20L * 60L * saveEvery, 20L * 60L * saveEvery);
+        new Metrics(this, 0);
+        if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
+            new ShopExpansion(this).register();
+        }
+
+        int saveEvery =
+                Math.max(1, getConfig().getInt("dynamicPricing.decay.saveEveryMinutes", 5));
+        Bukkit.getScheduler()
+                .runTaskTimerAsynchronously(
+                        this, dynamic::tickSaveAll, 20L * 60L * saveEvery, 20L * 60L * saveEvery);
 
         getCommand("shop").setExecutor(new ShopCommand(this));
         getCommand("sell").setExecutor(new SellCommand(this));
         getCommand("sellall").setExecutor(new SellAllCommand(this));
         getCommand("shoplog").setExecutor(new ShopLogCommand(this));
         getCommand("weeklyshop").setExecutor(new WeeklyShopCommand(this));
-        getLogger().info("DynamicServerShop enabled (Importer + Admin + Category multipliers + Fuzzy Search).");
+        getLogger().info(
+                "DynamicServerShop enabled (Importer + Admin + Category multipliers + Fuzzy Search).");
     }
 
-    @Override public void onDisable() {
+    @Override
+    public void onDisable() {
         if (logger != null) logger.close();
         if (dynamic != null) dynamic.close();
     }
 
     private boolean setupEconomy() {
         if (getServer().getPluginManager().getPlugin("Vault") == null) return false;
-        RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
+        RegisteredServiceProvider<Economy> rsp =
+                getServer().getServicesManager().getRegistration(Economy.class);
         if (rsp == null) return false;
         economy = rsp.getProvider();
         return economy != null;
@@ -72,12 +87,35 @@ public final class ServerShopPlugin extends JavaPlugin {
         return prefix + msg;
     }
 
-    public Economy economy() { return economy; }
-    public Catalog catalog() { return catalog; }
-    public LoggerManager logger() { return logger; }
-    public WeeklyShopManager weekly() { return weekly; }
-    public MenuManager menus() { return menus; }
-    public ShopService shop() { return shopService; }
-    public DynamicPricingManager dynamic() { return dynamic; }
-    public CategorySettings categorySettings() { return categorySettings; }
+    public Economy economy() {
+        return economy;
+    }
+
+    public Catalog catalog() {
+        return catalog;
+    }
+
+    public LoggerManager logger() {
+        return logger;
+    }
+
+    public WeeklyShopManager weekly() {
+        return weekly;
+    }
+
+    public MenuManager menus() {
+        return menus;
+    }
+
+    public ShopService shop() {
+        return shopService;
+    }
+
+    public DynamicPricingManager dynamic() {
+        return dynamic;
+    }
+
+    public CategorySettings categorySettings() {
+        return categorySettings;
+    }
 }
