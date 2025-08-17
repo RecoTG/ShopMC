@@ -2,6 +2,7 @@ package com.yourorg.servershop.commands;
 
 import com.yourorg.servershop.ServerShopPlugin;
 import com.yourorg.servershop.importer.ShopImporter;
+import com.yourorg.servershop.config.ConfigMigrator;
 import org.bukkit.ChatColor;
 import org.bukkit.command.*;
 
@@ -19,6 +20,7 @@ public final class AdminCommand {
             case "import": return handleImport(sender);
             case "reload":
                 plugin.reloadConfig();
+                ConfigMigrator.migrate(plugin);
                 plugin.categorySettings().load();
                 plugin.catalog().reload();
                 sender.sendMessage(plugin.prefixed("Reloaded."));

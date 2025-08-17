@@ -32,6 +32,7 @@ public final class ServerShopPlugin extends JavaPlugin {
     @Override
     public void onEnable() {
         saveDefaultConfig();
+        ConfigMigrator.migrate(this);
         saveResource("messages.yml", false);
         saveResource("shop.yml", false);
         if (!setupEconomy()) {
