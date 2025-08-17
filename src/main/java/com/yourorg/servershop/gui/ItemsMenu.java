@@ -44,6 +44,10 @@ public final class ItemsMenu implements MenuView {
             p.sendMessage(plugin.prefixed(m.name()+": $"+String.format("%.2f", buy)));
             return;
         }
+        if (plugin.economy() == null) {
+            p.sendMessage(plugin.prefixed(plugin.getConfig().getString("messages.no-economy")));
+            return;
+        }
         int qty = e.isShiftClick() ? 16 : 1;
         plugin.shop().buy(p, m, qty).ifPresent(err -> p.sendMessage(plugin.prefixed(err)));
     }

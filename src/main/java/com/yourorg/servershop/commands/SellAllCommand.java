@@ -10,6 +10,7 @@ public final class SellAllCommand implements CommandExecutor {
 
     @Override public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
         if (!(sender instanceof Player p)) { sender.sendMessage(plugin.prefixed(plugin.getConfig().getString("messages.not-a-player"))); return true; }
+        if (plugin.economy() == null) { p.sendMessage(plugin.prefixed(plugin.getConfig().getString("messages.no-economy"))); return true; }
         plugin.menus().openSell(p);
         return true;
     }
