@@ -38,7 +38,8 @@ dynamicPricing:
   decay:
     enabled: true
     perHourTowards1: 0.02
-    saveEveryMinutes: 5
+    epsilon: 0.01      # skip decay if |multiplier-1| <= epsilon
+    saveEveryMinutes: 60  # how often to apply decay/snapshot (in minutes)
 gui:
   titles:
     categories: '&8Server Shop'
