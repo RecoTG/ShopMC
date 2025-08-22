@@ -1,0 +1,18 @@
+name: Farming
+icon: WHEAT
+order: 70
+weekly: false
+items:
+  - WHEAT_SEEDS
+  - WHEAT
+  - CARROT
+  - POTATO
+  - BEETROOT_SEEDS
+  - BEETROOT
+  - PUMPKIN_SEEDS
+  - MELON_SEEDS
+  - SUGAR_CANE
+  - BAMBOO
+  - COCOA_BEANS
+  - CACTUS
+  - NETHER_WART

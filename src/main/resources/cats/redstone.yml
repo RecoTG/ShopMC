@@ -1,0 +1,20 @@
+name: Redstone
+icon: REDSTONE
+order: 90
+weekly: false
+items:
+  - REDSTONE
+  - REDSTONE_BLOCK
+  - REPEATER
+  - COMPARATOR
+  - OBSERVER
+  - PISTON
+  - STICKY_PISTON
+  - DISPENSER
+  - DROPPER
+  - HOPPER
+  - NOTE_BLOCK
+  - DAYLIGHT_DETECTOR
+  - TARGET
+  - LEVER
+  - TRIPWIRE_HOOK

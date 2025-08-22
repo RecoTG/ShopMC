@@ -1,0 +1,13 @@
+name: Bricks
+icon: BRICKS
+order: 50
+weekly: false
+items:
+  - BRICKS
+  - STONE_BRICKS
+  - MOSSY_STONE_BRICKS
+  - CRACKED_STONE_BRICKS
+  - NETHER_BRICKS
+  - RED_NETHER_BRICKS
+  - DEEPSLATE_BRICKS
+  - MUD_BRICKS

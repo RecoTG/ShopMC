@@ -1,0 +1,11 @@
+name: End
+icon: END_STONE
+order: 110
+weekly: false
+items:
+  - END_STONE
+  - END_STONE_BRICKS
+  - PURPUR_BLOCK
+  - PURPUR_PILLAR
+  - CHORUS_FRUIT
+  - CHORUS_FLOWER

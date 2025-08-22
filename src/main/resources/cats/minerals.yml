@@ -1,0 +1,21 @@
+name: Minerals
+icon: IRON_INGOT
+order: 80
+weekly: false
+items:
+  - COAL
+  - COAL_BLOCK
+  - IRON_INGOT
+  - COPPER_INGOT
+  - GOLD_INGOT
+  - NETHERITE_INGOT
+  - REDSTONE
+  - REDSTONE_BLOCK
+  - LAPIS_LAZULI
+  - LAPIS_BLOCK
+  - EMERALD
+  - EMERALD_BLOCK
+  - DIAMOND
+  - DIAMOND_BLOCK
+  - QUARTZ
+  - QUARTZ_BLOCK

@@ -1,0 +1,18 @@
+# Maven
+target/
+dependency-reduced-pom.xml
+
+# IDE
+*.iml
+.idea/
+.project
+.classpath
+.settings/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Server/data
+plugins/PlayerMarket/data/
+*.log

@@ -1,0 +1,5 @@
+name: Weekly Items
+icon: CLOCK
+order: 999
+weekly: true
+items: []
