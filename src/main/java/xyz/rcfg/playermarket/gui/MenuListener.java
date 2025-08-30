@@ -1,5 +1,6 @@
 package xyz.rcfg.playermarket.gui;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -10,6 +11,8 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
+
+import xyz.rcfg.playermarket.PlayerMarketPlugin;
 import xyz.rcfg.playermarket.service.PricingService;
 import xyz.rcfg.playermarket.service.ShopService;
 
@@ -136,11 +139,11 @@ public class MenuListener implements Listener {
             if (it==null || it.getType()==Material.AIR) continue;
             Material m = it.getType();
             var info = svc.getItemInfo(m);
-            if (info == null) continue;
-
             long amt = it.getAmount();
             long stock = svc.getStock().getStock(m.name());
             var price = svc.getPricing().computePrices(info, stock, false);
+            if (info == null) { p.getInventory().addItem(it); continue; }
+
             money += price.sellUnit() * amt; total += amt; unique++;
             svc.getStock().addStock(m.name(), amt);
         }

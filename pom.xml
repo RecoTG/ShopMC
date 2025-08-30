@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>xyz.rcfg</groupId>
   <artifactId>player-market</artifactId>
-  <version>0.7.5</version>
+  <version>0.7.6</version>
   <name>PlayerMarket</name>
   <packaging>jar</packaging>
   <properties>
